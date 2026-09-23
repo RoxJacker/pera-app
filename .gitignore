@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Expo
+.expo/
+**/.expo/
+dist/
+web-build/
+
+# Variables de entorno locales
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Builds nativos temporales
+android/
+ios/
+**/.kotlin/
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
