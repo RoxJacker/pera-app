@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta Móvil — Fase 1 · Belleza Ana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F0E6D8; --cream-soft:#F7F1E8; --surface:#FFFFFF;
+    --brand:#714329; --brand-mid:#9C6A47; --tan:#B08463; --blush:#D9C2AC;
+    --stone:#B5A192; --stone-light:#E4D9CB; --ink:#2A2118; --ink-soft:#6B5D4F;
+    --sage:#7C8A62; --sage-bg:#E7EBDC; --terra:#C1694F; --terra-bg:#F3DFD5;
+    --amber-bg:#F5E3C4; --amber-ink:#8C5E12;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Montserrat',sans-serif;background:#E3D8C6;color:var(--ink);padding:30px 12px;display:flex;justify-content:center;}
+  .num{font-family:'Fraunces',serif;font-weight:500;}
+
+  .phone{
+    width:380px;height:800px;background:var(--cream);border-radius:44px;
+    box-shadow:0 30px 70px rgba(42,33,24,.28), 0 0 0 10px #1c1712, 0 0 0 12px #3a2f26;
+    overflow:hidden;position:relative;display:flex;flex-direction:column;
+  }
+  .notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:130px;height:26px;background:#1c1712;border-radius:0 0 16px 16px;z-index:20;
+  }
+
+  .topbar{padding:38px 18px 12px;display:flex;align-items:center;justify-content:space-between;background:var(--cream);flex-shrink:0;}
+  .topbar .title{font-size:17px;font-weight:800;}
+  .topbar .sub{font-size:10.5px;color:var(--ink-soft);margin-top:1px;}
+  .icon-btn{width:32px;height:32px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 1px 3px rgba(42,33,24,.08);}
+
+  .content{flex:1;overflow-y:auto;padding:6px 18px 90px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .card{background:var(--surface);border-radius:16px;padding:15px 16px;box-shadow:0 1px 3px rgba(42,33,24,.06);margin-bottom:12px;}
+  .metric-label{font-size:10px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+  .metric-value{font-size:22px;}
+  .metric-delta{font-size:10.5px;font-weight:700;margin-top:5px;}
+  .up{color:var(--sage);} .down{color:var(--terra);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+
+  .badge{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:100px;display:inline-block;white-space:nowrap;}
+  .badge-ok{background:var(--sage-bg);color:#4E5A38;}
+  .badge-low{background:var(--terra-bg);color:#8C4127;}
+  .badge-warn{background:var(--amber-bg);color:var(--amber-ink);}
+
+  .list-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--stone-light);}
+  .list-row:first-child{border-top:none;}
+  .thumb{width:40px;height:40px;border-radius:11px;flex-shrink:0;}
+  .thumb-round{border-radius:50%;}
+  .li-info{flex:1;min-width:0;}
+  .li-name{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .li-meta{font-size:10.5px;color:var(--stone);margin-top:1px;}
+  .li-right{text-align:right;flex-shrink:0;}
+
+  .search-box{background:var(--surface);border:1px solid var(--stone-light);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .search-box span{color:var(--stone);font-size:12.5px;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;}
+  .tab{padding:7px 14px;border-radius:100px;font-size:11.5px;font-weight:700;color:var(--ink-soft);border:1px solid var(--stone-light);white-space:nowrap;}
+  .tab.active{background:var(--brand);color:var(--cream);border-color:var(--brand);}
+
+  .btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:13px;font-size:13px;font-weight:700;}
+  .btn-primary{background:var(--brand);color:var(--cream);}
+  .btn-ghost{background:var(--surface);color:var(--brand);border:1px solid var(--stone-light);}
+
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:10.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;}
+  .field input,.field select,.field textarea{
+    width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--stone-light);
+    background:var(--cream-soft);font-family:'Montserrat',sans-serif;font-size:13px;color:var(--ink);
+  }
+
+  .toggle{width:36px;height:21px;border-radius:100px;background:var(--stone-light);position:relative;flex-shrink:0;}
+  .toggle.on{background:var(--brand);}
+  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--surface);}
+  .toggle.on::after{left:17px;}
+
+  .bars{display:flex;align-items:flex-end;gap:6px;height:100px;margin:14px 0 4px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .bar{width:100%;border-radius:5px 5px 0 0;background:var(--brand);}
+  .bar-lbl{font-size:9px;color:var(--stone);}
+
+  .avatar-lg{width:56px;height:56px;border-radius:50%;background:var(--brand);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;}
+
+  .prod-card{background:var(--surface);border-radius:14px;padding:11px 8px;text-align:center;box-shadow:0 1px 3px rgba(42,33,24,.06);}
+  .pedestal{width:48px;height:48px;border-radius:50%;margin:0 auto 8px;}
+  .prod-name{font-size:11px;font-weight:700;line-height:1.25;}
+  .prod-price{font-family:'Fraunces',serif;font-size:14px;color:var(--brand);margin-top:2px;}
+
+  .cart-bar{
+    position:absolute;left:14px;right:14px;bottom:88px;background:var(--brand);color:var(--cream);
+    border-radius:16px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 10px 24px rgba(113,67,41,.35);
+  }
+  .cart-bar .l1{font-size:12px;font-weight:700;}
+  .cart-bar .l2{font-size:10px;opacity:.8;margin-top:1px;}
+  .cart-bar .amt{font-family:'Fraunces',serif;font-size:16px;}
+
+  .bottomnav{
+    position:absolute;bottom:0;left:0;right:0;height:74px;background:var(--surface);
+    border-top:1px solid var(--stone-light);display:flex;align-items:center;
+    padding-bottom:14px;z-index:15;
+  }
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--stone);}
+  .bn-item.active{color:var(--brand);}
+  .bn-label{font-size:9.5px;font-weight:700;}
+  .bn-icon{font-size:17px;line-height:1;}
+
+  .sheet-overlay{position:absolute;inset:0;background:rgba(42,33,24,.4);display:none;z-index:25;}
+  .sheet-overlay.open{display:block;}
+  .sheet{
+    position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;
+    padding:10px 18px 26px;transform:translateY(100%);transition:transform .25s ease;z-index:26;
+  }
+  .sheet-overlay.open .sheet{transform:translateY(0);}
+  .sheet-handle{width:36px;height:4px;background:var(--stone-light);border-radius:100px;margin:6px auto 14px;}
+  .sheet-title{font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.3px;}
+  .sheet-item{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--stone-light);font-size:13.5px;font-weight:600;}
+  .sheet-item:first-child{border-top:none;}
+  .sheet-dot{width:8px;height:8px;border-radius:50%;background:var(--blush);}
+
+  .ganancia-hero{
+    background:linear-gradient(155deg, var(--brand) 0%, var(--brand-mid) 100%);
+    border-radius:20px;padding:22px 20px;color:var(--cream);margin-bottom:14px;
+  }
+  .ganancia-hero .lbl{font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+  .ganancia-hero .big{font-family:'Fraunces',serif;font-size:34px;font-weight:500;}
+  .ganancia-hero .caption{font-size:11px;opacity:.8;margin-top:4px;}
+  .split-row{display:flex;gap:10px;margin-top:16px;}
+  .split-col{flex:1;background:rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;}
+  .split-col .l{font-size:9.5px;opacity:.8;text-transform:uppercase;letter-spacing:.3px;}
+  .split-col .v{font-family:'Fraunces',serif;font-size:17px;margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <div class="topbar" id="topbar">
+    <div><div class="title" id="tb-title">Belleza Ana</div><div class="sub" id="tb-sub">Jueves 28 de agosto</div></div>
+    <div class="icon-btn">🔔</div>
+  </div>
+
+  <div class="content" id="content">
+
+    <!-- 1. LOGIN -->
+    <div class="screen" data-screen="login">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:560px;">
+        <div class="avatar-lg" style="margin-bottom:16px;">B</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:3px;">Belleza Ana</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:24px;">Ingresa tu PIN</div>
+        <div style="display:flex;gap:9px;margin-bottom:24px;">
+          <div style="width:38px;height:46px;border-radius:11px;background:var(--cream-soft);border:1px solid var(--stone-light);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">•</div>
+          <div style="width:38px;height:46px;border-radius:11px;background:var(--cream-soft);border:1px solid var(--stone-light);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">•</div>
+          <div style="width:38px;height:46px;border-radius:11px;background:var(--cream-soft);border:1px solid var(--stone-light);"></div>
+          <div style="width:38px;height:46px;border-radius:11px;background:var(--cream-soft);border:1px solid var(--stone-light);"></div>
+        </div>
+        <div class="btn btn-primary" style="width:220px;" onclick="go('dashboard')">Ingresar</div>
+      </div>
+    </div>
+
+    <!-- 2. DASHBOARD -->
+    <div class="screen" data-screen="dashboard">
+      <div class="grid2" style="margin-bottom:10px;">
+        <div class="card"><div class="metric-label">Ganancia hoy</div><div class="metric-value num">$412</div><div class="metric-delta up">↑ 18%</div></div>
+        <div class="card"><div class="metric-label">Ganancia semana</div><div class="metric-value num">$2,180</div><div class="metric-delta up">↑ 6%</div></div>
+      </div>
+      <div class="grid2" style="margin-bottom:10px;">
+        <div class="card"><div class="metric-label">Ventas hoy</div><div class="metric-value num">7</div><div class="metric-delta" style="color:var(--stone);">3 prod · 4 serv</div></div>
+        <div class="card" onclick="go('ganancias')" style="cursor:pointer;"><div class="metric-label">Este mes</div><div class="metric-value" style="font-size:14px;color:var(--brand);font-weight:700;">Ver ganancias →</div></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:2px;">Ventas de la semana</div>
+        <div class="bars">
+          <div class="bar-col"><div class="bar" style="height:36px;"></div><div class="bar-lbl">L</div></div>
+          <div class="bar-col"><div class="bar" style="height:58px;"></div><div class="bar-lbl">M</div></div>
+          <div class="bar-col"><div class="bar" style="height:44px;"></div><div class="bar-lbl">M</div></div>
+          <div class="bar-col"><div class="bar" style="height:72px;background:var(--tan);"></div><div class="bar-lbl">J</div></div>
+          <div class="bar-col"><div class="bar" style="height:28px;opacity:.4;"></div><div class="bar-lbl">V</div></div>
+          <div class="bar-col"><div class="bar" style="height:28px;opacity:.4;"></div><div class="bar-lbl">S</div></div>
+          <div class="bar-col"><div class="bar" style="height:14px;opacity:.4;"></div><div class="bar-lbl">D</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:6px;">Stock bajo</div>
+        <div class="list-row"><div class="li-info"><div class="li-name">Base líquida NW20</div></div><span class="badge badge-low">3 pzas</span></div>
+        <div class="list-row"><div class="li-info"><div class="li-name">Esmalte terracota</div></div><span class="badge badge-low">4 pzas</span></div>
+      </div>
+    </div>
+
+    <!-- 3. POS -->
+    <div class="screen" data-screen="pos" style="position:relative;">
+      <div class="search-box"><span>🔍  Buscar producto o servicio</span></div>
+      <div class="tabs">
+        <div class="tab active">Todos</div><div class="tab">Tintes</div><div class="tab">Maquillaje</div><div class="tab">Servicios</div>
+      </div>
+      <div class="grid3">
+        <div class="prod-card"><div class="pedestal" style="background:#EBD9CC;"></div><div class="prod-name">Tinte Igora</div><div class="prod-price">$185</div></div>
+        <div class="prod-card"><div class="pedestal" style="background:#E7EBDC;"></div><div class="prod-name">Base líquida</div><div class="prod-price">$320</div></div>
+        <div class="prod-card"><div class="pedestal" style="background:#D9C2AC;"></div><div class="prod-name">Brocha kabuki</div><div class="prod-price">$95</div></div>
+        <div class="prod-card"><div class="pedestal" style="background:#F3DFD5;"></div><div class="prod-name">Esmalte</div><div class="prod-price">$65</div></div>
+        <div class="prod-card"><div class="pedestal" style="background:#EBD9CC;"></div><div class="prod-name">Corte</div><div class="prod-price">$250</div></div>
+        <div class="prod-card"><div class="pedestal" style="background:#E4D9CB;"></div><div class="prod-name">Manicura</div><div class="prod-price">$180</div></div>
+      </div>
+    </div>
+
+    <!-- 4. TICKET -->
+    <div class="screen" data-screen="ticket">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:560px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--sage-bg);color:#4E5A38;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px;">✓</div>
+        <div style="font-weight:800;font-size:15px;">Venta registrada</div>
+        <div style="font-size:11px;color:var(--stone);margin-bottom:18px;">Folio #0042 · 3:42 pm</div>
+        <div class="card" style="width:100%;">
+          <div class="list-row"><div class="li-info"><div class="li-name">Tinte Igora 5.4</div></div><span class="num" style="font-size:12.5px;">$185</span></div>
+          <div class="list-row"><div class="li-info"><div class="li-name">Corte + peinado</div></div><span class="num" style="font-size:12.5px;">$250</span></div>
+        </div>
+        <div class="num" style="font-size:24px;margin:14px 0 18px;">$435</div>
+        <div class="btn btn-ghost" style="width:100%;margin-bottom:8px;">Compartir por WhatsApp</div>
+        <div class="btn btn-primary" style="width:100%;" onclick="go('pos')">Nueva venta</div>
+      </div>
+    </div>
+
+    <!-- 5. INVENTARIO -->
+    <div class="screen" data-screen="inventario">
+      <div class="search-box"><span>🔍  Buscar producto</span></div>
+      <div class="card">
+        <div class="list-row" onclick="go('producto')"><div class="thumb" style="background:#EBD9CC;"></div><div class="li-info"><div class="li-name">Tinte Igora 5.4</div><div class="li-meta">Tintes</div></div><div class="li-right"><div class="num" style="font-size:13px;">$185</div><span class="badge badge-ok">12 pzas</span></div></div>
+        <div class="list-row" onclick="go('producto')"><div class="thumb" style="background:#E7EBDC;"></div><div class="li-info"><div class="li-name">Base líquida NW20</div><div class="li-meta">Maquillaje</div></div><div class="li-right"><div class="num" style="font-size:13px;">$320</div><span class="badge badge-low">3 pzas</span></div></div>
+        <div class="list-row" onclick="go('producto')"><div class="thumb" style="background:#D9C2AC;"></div><div class="li-info"><div class="li-name">Brocha kabuki</div><div class="li-meta">Brochas</div></div><div class="li-right"><div class="num" style="font-size:13px;">$95</div><span class="badge badge-ok">8 pzas</span></div></div>
+        <div class="list-row" onclick="go('producto')"><div class="thumb" style="background:#F3DFD5;"></div><div class="li-info"><div class="li-name">Esmalte terracota</div><div class="li-meta">Uñas</div></div><div class="li-right"><div class="num" style="font-size:13px;">$65</div><span class="badge badge-low">4 pzas</span></div></div>
+      </div>
+    </div>
+
+    <!-- 6. PRODUCTO CRUD -->
+    <div class="screen" data-screen="producto">
+      <div style="width:100%;height:130px;border-radius:14px;background:#EBD9CC;display:flex;align-items:center;justify-content:center;color:var(--brand);font-weight:700;font-size:11.5px;margin-bottom:14px;">Foto del producto</div>
+      <div class="field"><label>Nombre</label><input value="Tinte Igora 5.4"></div>
+      <div class="grid2">
+        <div class="field"><label>Marca</label><input value="Schwarzkopf"></div>
+        <div class="field"><label>Categoría</label><select><option>Tintes</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Costo</label><input value="$95"></div>
+        <div class="field"><label>Precio venta</label><input value="$185"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Stock actual</label><input value="12"></div>
+        <div class="field"><label>Stock mínimo</label><input value="5"></div>
+      </div>
+      <div class="btn btn-primary" style="width:100%;margin-top:4px;">Guardar cambios</div>
+    </div>
+
+    <!-- 7. NUEVA ENTRADA -->
+    <div class="screen" data-screen="entrada">
+      <div class="field"><label>Producto</label><input value="Tinte Igora 5.4" placeholder="Buscar o crear nuevo..."></div>
+      <div class="grid2">
+        <div class="field"><label>Cantidad</label><input value="10"></div>
+        <div class="field"><label>Costo unitario</label><input value="$95"></div>
+      </div>
+      <div class="field"><label>Proveedor</label><input placeholder="Opcional"></div>
+      <div class="field"><label>Fecha</label><input value="28/08/2026"></div>
+      <div class="card" style="background:var(--cream-soft);box-shadow:none;">
+        <div style="font-size:10.5px;color:var(--ink-soft);">Stock resultante</div>
+        <div class="num" style="font-size:19px;">12 → 22 piezas</div>
+      </div>
+      <div class="btn btn-primary" style="width:100%;">Registrar entrada</div>
+    </div>
+
+    <!-- 8. SERVICIOS (simplificado: solo cobro unitario, sin receta de insumos) -->
+    <div class="screen" data-screen="servicios">
+      <div class="card">
+        <div class="list-row"><div class="thumb thumb-round" style="background:#EBD9CC;"></div><div class="li-info"><div class="li-name">Corte + peinado</div><div class="li-meta">Servicio</div></div><div class="num" style="font-size:14px;color:var(--brand);">$250</div></div>
+        <div class="list-row"><div class="thumb thumb-round" style="background:#E4D9CB;"></div><div class="li-info"><div class="li-name">Manicura completa</div><div class="li-meta">Servicio</div></div><div class="num" style="font-size:14px;color:var(--brand);">$180</div></div>
+        <div class="list-row"><div class="thumb thumb-round" style="background:#D9C2AC;"></div><div class="li-info"><div class="li-name">Coloración completa</div><div class="li-meta">Servicio</div></div><div class="num" style="font-size:14px;color:var(--brand);">$420</div></div>
+      </div>
+      <div class="btn btn-ghost" style="width:100%;">+ Agregar servicio</div>
+      <div class="card" style="margin-top:12px;background:var(--cream-soft);box-shadow:none;">
+        <div style="font-size:10.5px;color:var(--ink-soft);line-height:1.5;">Los servicios se cobran a precio fijo. No descuentan insumos de inventario de forma automática — si un servicio usa producto, ese consumo se registra manualmente cuando haga falta.</div>
+      </div>
+    </div>
+
+    <!-- 9. HISTORIAL -->
+    <div class="screen" data-screen="historial">
+      <div class="card">
+        <div class="list-row"><div class="li-info"><div class="li-name">#0042 · Tinte + Corte</div><div class="li-meta">Hoy, 3:42 pm</div></div><div class="li-right"><div class="num" style="font-size:13px;">$435</div><div style="font-size:10px;color:var(--sage);font-weight:700;">+$220</div></div></div>
+        <div class="list-row"><div class="li-info"><div class="li-name">#0041 · Manicura</div><div class="li-meta">Hoy, 1:15 pm</div></div><div class="li-right"><div class="num" style="font-size:13px;">$180</div><div style="font-size:10px;color:var(--sage);font-weight:700;">+$140</div></div></div>
+        <div class="list-row"><div class="li-info"><div class="li-name">#0040 · 2x Esmalte</div><div class="li-meta">Ayer, 5:30 pm</div></div><div class="li-right"><div class="num" style="font-size:13px;">$130</div><div style="font-size:10px;color:var(--sage);font-weight:700;">+$60</div></div></div>
+      </div>
+    </div>
+
+    <!-- 10. GANANCIAS (nueva, reemplaza Reportes + Gastos) -->
+    <div class="screen" data-screen="ganancias">
+      <div class="ganancia-hero">
+        <div class="lbl">Lo que realmente ganas este mes</div>
+        <div class="big">$6,340</div>
+        <div class="caption">Ganancia neta de agosto · actualizado hoy</div>
+        <div class="split-row">
+          <div class="split-col"><div class="l">Bruta</div><div class="v">$7,190</div></div>
+          <div class="split-col"><div class="l">Gastos fijos</div><div class="v">–$850</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:10px;">¿Cómo se calcula?</div>
+        <div style="font-size:11px;color:var(--ink-soft);line-height:1.6;">
+          <b>Ganancia bruta</b> = suma de (precio de venta − costo) de todo lo vendido en el mes.<br><br>
+          <b>Ganancia neta</b> = ganancia bruta − tus gastos fijos del mes (renta, insumos generales, transporte, etc.), que capturas aquí como un solo monto mensual.
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:10px;">Gastos fijos de agosto</div>
+        <div class="field" style="margin-bottom:6px;"><input value="$850"></div>
+        <div class="btn btn-ghost" style="width:100%;">Actualizar monto</div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">Ganancia por tipo</div>
+        <div class="list-row"><div class="li-info"><div class="li-name">Productos vendidos</div></div><span class="num" style="font-size:13px;">$3,540</span></div>
+        <div class="list-row"><div class="li-info"><div class="li-name">Servicios realizados</div></div><span class="num" style="font-size:13px;">$3,650</span></div>
+      </div>
+    </div>
+
+    <!-- 11. CONFIGURACIÓN -->
+    <div class="screen" data-screen="config">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="avatar-lg">B</div>
+        <div><div style="font-weight:700;font-size:14px;">Belleza Ana</div><div style="font-size:10.5px;color:var(--stone);">Cambiar logo</div></div>
+      </div>
+      <div class="field"><label>Nombre del negocio</label><input value="Belleza Ana"></div>
+      <div class="field"><label>Moneda</label><select><option>MXN — Peso mexicano</option></select></div>
+      <div class="card">
+        <div class="list-row" style="justify-content:space-between;"><span style="font-size:12.5px;font-weight:600;">Texto grande</span><div class="toggle on"></div></div>
+        <div class="list-row" style="justify-content:space-between;"><span style="font-size:12.5px;font-weight:600;">Alertas de stock bajo</span><div class="toggle on"></div></div>
+      </div>
+      <div class="btn btn-ghost" style="width:100%;color:var(--terra);border-color:var(--terra-bg);">Cerrar sesión</div>
+    </div>
+
+  </div>
+
+  <div class="cart-bar" id="cartbar" style="display:none;" onclick="go('ticket')">
+    <div><div class="l1">Ver venta · 2 artículos</div><div class="l2">Toca para cobrar</div></div>
+    <div class="amt">$435 →</div>
+  </div>
+
+  <div class="bottomnav">
+    <div class="bn-item active" data-target="dashboard" onclick="go('dashboard')"><span class="bn-icon">⌂</span><span class="bn-label">Inicio</span></div>
+    <div class="bn-item" data-target="pos" onclick="go('pos')"><span class="bn-icon">＋</span><span class="bn-label">Venta</span></div>
+    <div class="bn-item" data-target="inventario" onclick="go('inventario')"><span class="bn-icon">▤</span><span class="bn-label">Inventario</span></div>
+    <div class="bn-item" data-target="ganancias" onclick="go('ganancias')"><span class="bn-icon">$</span><span class="bn-label">Ganancias</span></div>
+    <div class="bn-item" data-target="mas" onclick="openSheet()"><span class="bn-icon">•••</span><span class="bn-label">Más</span></div>
+  </div>
+
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheetOutside(event)">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Más opciones</div>
+      <div class="sheet-item" onclick="go('historial')"><div class="sheet-dot"></div>Historial de ventas</div>
+      <div class="sheet-item" onclick="go('servicios')"><div class="sheet-dot"></div>Servicios</div>
+      <div class="sheet-item" onclick="go('entrada')"><div class="sheet-dot"></div>Nueva entrada</div>
+      <div class="sheet-item" onclick="go('producto')"><div class="sheet-dot"></div>Detalle de producto</div>
+      <div class="sheet-item" onclick="go('config')"><div class="sheet-dot"></div>Configuración</div>
+      <div class="sheet-item" onclick="go('ticket')"><div class="sheet-dot"></div>Ticket de venta</div>
+      <div class="sheet-item" onclick="go('login')"><div class="sheet-dot"></div>Pantalla de login</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const titles = {
+  login:['',''],
+  dashboard:['Belleza Ana','Jueves 28 de agosto'],
+  pos:['Nueva venta','Selecciona productos o servicios'],
+  ticket:['Confirmación','Venta finalizada'],
+  inventario:['Inventario','48 productos activos'],
+  producto:['Editar producto','Tinte Igora 5.4'],
+  entrada:['Nueva entrada','Registrar compra'],
+  servicios:['Servicios','Cobro unitario, sin receta'],
+  historial:['Historial','Agosto 2026'],
+  ganancias:['Ganancias','Bruta y neta del mes'],
+  config:['Configuración','']
+};
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===id));
+  document.querySelectorAll('.bn-item').forEach(n=>n.classList.toggle('active', n.dataset.target===id));
+  document.getElementById('content').scrollTop = 0;
+  document.getElementById('topbar').style.display = (id==='login') ? 'none' : 'flex';
+  document.getElementById('tb-title').textContent = titles[id][0];
+  document.getElementById('tb-sub').textContent = titles[id][1];
+  document.getElementById('cartbar').style.display = (id==='pos') ? 'flex' : 'none';
+  closeSheet();
+}
+function openSheet(){ document.getElementById('sheetOverlay').classList.add('open'); }
+function closeSheet(){ document.getElementById('sheetOverlay').classList.remove('open'); }
+function closeSheetOutside(e){ if(e.target.id==='sheetOverlay') closeSheet(); }
+
+go('dashboard');
+</script>
+
+</body>
+</html>
