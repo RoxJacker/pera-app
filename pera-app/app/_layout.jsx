@@ -12,10 +12,30 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { Fraunces_500Medium } from '@expo-google-fonts/fraunces';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Colors } from '../src/theme';
+import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 
 // Mantener el splash hasta que las fuentes estén listas
 SplashScreen.preventAutoHideAsync();
+
+function AppNavigator() {
+  const { isDark, theme } = useTheme();
+  return (
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={theme.cream} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/login" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="producto/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="entrada" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="servicios" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="historial" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="agenda" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="config" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="ticket" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      </Stack>
+    </>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -37,18 +57,9 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" backgroundColor={Colors.cream} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/login" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen name="producto/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-        <Stack.Screen name="entrada" options={{ headerShown: false, animation: 'slide_from_right' }} />
-        <Stack.Screen name="servicios" options={{ headerShown: false, animation: 'slide_from_right' }} />
-        <Stack.Screen name="historial" options={{ headerShown: false, animation: 'slide_from_right' }} />
-        <Stack.Screen name="agenda" options={{ headerShown: false, animation: 'slide_from_right' }} />
-        <Stack.Screen name="config" options={{ headerShown: false, animation: 'slide_from_right' }} />
-        <Stack.Screen name="ticket" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-      </Stack>
+      <ThemeProvider>
+        <AppNavigator />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, Modal, Pressable,
-  StyleSheet, Animated,
+  View, Text, TouchableOpacity, Modal, Pressable, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography, Radii } from '../../theme';
+import { Radii } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 import Icon from '../ui/Icon';
 
 const SHEET_ITEMS = [
@@ -25,6 +24,7 @@ const SHEET_ITEMS = [
 export default function MoreSheet({ visible, onClose }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
 
   const navigate = (route) => {
     onClose();
@@ -40,22 +40,40 @@ export default function MoreSheet({ visible, onClose }) {
       statusBarTranslucent
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          <View style={styles.handle} />
-          <Text style={styles.sheetTitle}>Más opciones</Text>
+        <Pressable
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: theme.surface,
+              borderTopColor: theme.stoneLight,
+              paddingBottom: insets.bottom + 16,
+            },
+          ]}
+        >
+          <View style={[styles.handle, { backgroundColor: theme.stoneLight }]} />
+          <Text style={[styles.sheetTitle, { color: theme.inkSoft }]}>Más opciones</Text>
 
           {SHEET_ITEMS.map((item, i) => (
             <TouchableOpacity
               key={item.route}
-              style={[styles.sheetItem, i === 0 && styles.firstItem]}
+              style={[
+                styles.sheetItem,
+                { borderTopColor: theme.stoneLight },
+                i === 0 && styles.firstItem,
+              ]}
               onPress={() => navigate(item.route)}
               activeOpacity={0.7}
               accessibilityRole="button"
             >
-              <View style={styles.iconCircle}>
-                <Icon name={item.iconName} size={16} color={Colors.brand} />
+              <View
+                style={[
+                  styles.iconCircle,
+                  { backgroundColor: theme.creamSoft, borderColor: theme.stoneLight },
+                ]}
+              >
+                <Icon name={item.iconName} size={16} color={theme.brand} />
               </View>
-              <Text style={styles.sheetItemLabel}>{item.label}</Text>
+              <Text style={[styles.sheetItemLabel, { color: theme.ink }]}>{item.label}</Text>
             </TouchableOpacity>
           ))}
         </Pressable>
@@ -67,22 +85,19 @@ export default function MoreSheet({ visible, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.surface,
     borderTopLeftRadius: Radii.sheet,
     borderTopRightRadius: Radii.sheet,
     borderTopWidth: 1,
-    borderTopColor: Colors.stoneLight,
     paddingHorizontal: 18,
     paddingTop: 10,
   },
   handle: {
     width: 36,
     height: 4,
-    backgroundColor: Colors.stoneLight,
     borderRadius: Radii.pill,
     alignSelf: 'center',
     marginBottom: 14,
@@ -90,7 +105,6 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 13,
     fontFamily: 'Montserrat_800ExtraBold',
-    color: Colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 10,
@@ -101,24 +115,18 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 13,
     borderTopWidth: 1,
-    borderTopColor: Colors.stoneLight,
   },
-  firstItem: {
-    borderTopWidth: 0,
-  },
+  firstItem: { borderTopWidth: 0 },
   iconCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.creamSoft,
     borderWidth: 1,
-    borderColor: Colors.stoneLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sheetItemLabel: {
     fontSize: 13.5,
     fontFamily: 'Montserrat_600SemiBold',
-    color: Colors.ink,
   },
 });

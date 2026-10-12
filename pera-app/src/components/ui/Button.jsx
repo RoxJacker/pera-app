@@ -1,8 +1,9 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { Colors, Radii } from '../../theme';
+import { Radii } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
- * Button — Botón primario o ghost
+ * Button — Botón primario, ghost o danger
  * Props:
  *   variant: 'primary' | 'ghost' | 'danger'
  *   label: string
@@ -12,38 +13,41 @@ import { Colors, Radii } from '../../theme';
  *   style: ViewStyle
  */
 export default function Button({ variant = 'primary', label, onPress, loading, disabled, style }) {
-  const s = variantStyles[variant] ?? variantStyles.primary;
+  const { theme } = useTheme();
+
+  const getVariantStyle = () => {
+    switch (variant) {
+      case 'ghost':
+        return { bg: theme.surface, border: theme.stoneLight, text: theme.brand };
+      case 'danger':
+        return { bg: theme.surface, border: theme.terraBg, text: theme.terra };
+      default: // primary
+        return { bg: theme.brand, border: 'transparent', text: theme.brandText };
+    }
+  };
+
+  const v = getVariantStyle();
 
   return (
     <TouchableOpacity
-      style={[styles.btn, s.btn, disabled && styles.disabled, style]}
+      style={[
+        styles.btn,
+        { backgroundColor: v.bg, borderWidth: 1, borderColor: v.border },
+        disabled && styles.disabled,
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
       accessibilityRole="button"
     >
       {loading
-        ? <ActivityIndicator color={s.textColor} size="small" />
-        : <Text style={[styles.label, { color: s.textColor }]}>{label}</Text>
+        ? <ActivityIndicator color={v.text} size="small" />
+        : <Text style={[styles.label, { color: v.text }]}>{label}</Text>
       }
     </TouchableOpacity>
   );
 }
-
-const variantStyles = {
-  primary: {
-    btn: { backgroundColor: Colors.brand, borderWidth: 0 },
-    textColor: Colors.brandText,
-  },
-  ghost: {
-    btn: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.stoneLight },
-    textColor: Colors.brand,
-  },
-  danger: {
-    btn: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.terraBg },
-    textColor: Colors.terra,
-  },
-};
 
 const styles = StyleSheet.create({
   btn: {

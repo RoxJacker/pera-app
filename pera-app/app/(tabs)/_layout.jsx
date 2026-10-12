@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Tabs } from 'expo-router';
-import { TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import { TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MoreSheet from '../../src/components/layout/MoreSheet';
 import Icon from '../../src/components/ui/Icon';
-import { Colors } from '../../src/theme';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function TabsLayout() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   const bottomPadding = Math.max(insets.bottom, 6);
@@ -18,8 +19,8 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: Colors.brand,
-          tabBarInactiveTintColor: Colors.stone,
+          tabBarActiveTintColor: theme.brand,
+          tabBarInactiveTintColor: theme.stone,
           tabBarShowLabel: true,
           tabBarLabelStyle: {
             fontSize: 10,
@@ -28,8 +29,8 @@ export default function TabsLayout() {
             marginBottom: Platform.OS === 'android' ? 4 : 0,
           },
           tabBarStyle: {
-            backgroundColor: Colors.surface,
-            borderTopColor: Colors.stoneLight,
+            backgroundColor: theme.surface,
+            borderTopColor: theme.stoneLight,
             borderTopWidth: 1,
             height: barHeight,
             paddingBottom: bottomPadding,

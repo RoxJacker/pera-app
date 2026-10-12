@@ -1,21 +1,31 @@
 import { View, StyleSheet } from 'react-native';
-import { Colors, Radii, Shadows, Spacing } from '../../theme';
+import { Radii, Shadows, Spacing } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
- * Card — Contenedor base blanco con sombra suave
+ * Card — Contenedor base con sombra suave, responde al tema actual
  * Props:
  *   children: ReactNode
  *   style: ViewStyle (opcional)
  *   noPadding: boolean — quita el padding estándar
- *   soft: boolean — usa fondo cream-soft en vez de blanco
+ *   soft: boolean — usa fondo cream-soft en vez de surface
  */
 export default function Card({ children, style, noPadding, soft }) {
+  const { theme } = useTheme();
   return (
     <View
       style={[
-        styles.card,
-        soft && styles.soft,
-        noPadding && styles.noPadding,
+        {
+          backgroundColor: soft ? theme.creamSoft : theme.surface,
+          borderRadius: Radii.card,
+          borderWidth: 1,
+          borderColor: soft ? 'transparent' : theme.stoneLight,
+          paddingHorizontal: Spacing.screenPadding - 2,
+          paddingVertical: 15,
+          marginBottom: Spacing.cardGap,
+          ...(soft ? { shadowOpacity: 0, elevation: 0 } : Shadows.card),
+        },
+        noPadding && { paddingHorizontal: 0, paddingVertical: 0 },
         style,
       ]}
     >
@@ -23,26 +33,3 @@ export default function Card({ children, style, noPadding, soft }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radii.card,
-    borderWidth: 1,
-    borderColor: Colors.stoneLight,
-    paddingHorizontal: Spacing.screenPadding - 2,
-    paddingVertical: 15,
-    marginBottom: Spacing.cardGap,
-    ...Shadows.card,
-  },
-  soft: {
-    backgroundColor: Colors.creamSoft,
-    borderColor: 'transparent',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  noPadding: {
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-});
