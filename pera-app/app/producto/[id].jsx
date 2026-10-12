@@ -29,11 +29,15 @@ import {
 } from '../../src/services/productosService';
 
 const CATEGORIAS = [
+  'Maquillaje',
+  'Cuidado Facial',
+  'Capilar',
+  'Depilación',
+  'Herramientas',
   'Coloración',
   'Decoloración',
   'Cuidado',
   'Estilizado',
-  'Herramientas',
   'Uñas',
   'General',
 ];

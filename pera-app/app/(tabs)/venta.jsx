@@ -24,7 +24,7 @@ import { obtenerProductos } from '../../src/services/productosService';
 import { obtenerServicios } from '../../src/services/serviciosService';
 import { procesarVenta } from '../../src/services/ventasService';
 
-const CATEGORIAS_BASE = ['Todos', 'Coloración', 'Decoloración', 'Cuidado', 'Estilizado', 'Uñas', 'Servicios'];
+const CATEGORIAS_BASE = ['Todos', 'Maquillaje', 'Cuidado Facial', 'Capilar', 'Depilación', 'Herramientas', 'Coloración', 'Decoloración', 'Cuidado', 'Estilizado', 'Uñas', 'General', 'Servicios'];
 const METODOS_PAGO = ['Efectivo', 'Tarjeta', 'Transferencia'];
 const BILLETES_RAPIDOS = [100, 200, 500, 1000];
 
