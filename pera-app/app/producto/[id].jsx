@@ -182,34 +182,38 @@ export default function ProductoView() {
       return;
     }
 
+    // Desactivar el botón de inmediato y mantener la UI responsive
     setGuardando(true);
-    try {
-      const payload = {
-        nombre: nombre.trim(),
-        marca: marca.trim(),
-        categoria,
-        costo: parseFloat(costo) || 0,
-        precioVenta: parseFloat(precioVenta) || 0,
-        stock: parseInt(stock, 10) || 0,
-        stockMinimo: parseInt(stockMinimo, 10) || 3,
-        pedestalColor,
-      };
 
+    const payload = {
+      nombre: nombre.trim(),
+      marca: marca.trim(),
+      categoria,
+      costo: parseFloat(costo) || 0,
+      precioVenta: parseFloat(precioVenta) || 0,
+      stock: parseInt(stock, 10) || 0,
+      stockMinimo: parseInt(stockMinimo, 10) || 3,
+      pedestalColor,
+    };
+
+    try {
       if (esNuevo) {
         await crearProducto(payload, fotoUri);
-        Alert.alert('¡Listo!', 'Producto creado correctamente.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
       } else {
         await actualizarProducto(id, payload, fotoUri);
-        Alert.alert('¡Listo!', 'Cambios guardados correctamente.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
       }
+      // Éxito: navegar primero, alert después para que la UI no se bloquee
+      router.back();
+      // Alert leve (no imperativo) para confirmar al usuario
+      setTimeout(() => {
+        Alert.alert('¡Listo!', esNuevo ? 'Producto creado correctamente.' : 'Cambios guardados correctamente.');
+      }, 300);
     } catch (err) {
-      console.error('Error guardando producto:', err);
-      Alert.alert('Error', 'No se pudo guardar el producto. Inténtalo de nuevo.');
+      // Este catch solo se activa si hay un error grave no capturado en el service
+      console.error('Error inesperado guardando producto:', err);
+      Alert.alert('Error', 'No se pudo guardar el producto. Verifica tu conexión e inténtalo de nuevo.');
     } finally {
+      // SIEMPRE se restablece, incluso si hay excepción no capturada
       setGuardando(false);
     }
   };

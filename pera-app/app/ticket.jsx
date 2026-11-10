@@ -124,11 +124,14 @@ export default function TicketView() {
   };
 
   const esCancelada = ventaData.estado === 'cancelada';
-  const fechaFormateada = new Date(ventaData.fecha).toLocaleTimeString('es-MX', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const dVenta = new Date(ventaData.fecha);
+  const esMismoDia = !isNaN(dVenta.getTime()) && dVenta.toDateString() === new Date().toDateString();
+  const horaStr = !isNaN(dVenta.getTime())
+    ? dVenta.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true })
+    : '';
+  const fechaFormateada = esMismoDia
+    ? horaStr
+    : `${dVenta.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: dVenta.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })} · ${horaStr}`;
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}>

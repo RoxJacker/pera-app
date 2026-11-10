@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Radii, Shadows } from '../../theme';
 
 /**
@@ -9,11 +10,16 @@ import { Colors, Radii, Shadows } from '../../theme';
  *   onPress: () => void
  */
 export default function CartBar({ itemCount, total, onPress }) {
+  const insets = useSafeAreaInsets();
   if (!itemCount) return null;
+
+  const bottomOffset = Platform.OS === 'ios'
+    ? 68 + insets.bottom
+    : 80 + (insets.bottom > 0 ? insets.bottom : 12);
 
   return (
     <TouchableOpacity
-      style={styles.bar}
+      style={[styles.bar, { bottom: bottomOffset }]}
       onPress={onPress}
       activeOpacity={0.9}
       accessibilityRole="button"
@@ -33,7 +39,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 14,
     right: 14,
-    bottom: 80, // justo sobre el BottomNav (74px) + gap
     backgroundColor: Colors.brand,
     borderRadius: Radii.card,
     paddingHorizontal: 16,
@@ -42,6 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     ...Shadows.cartBar,
+    zIndex: 99,
   },
   line1: {
     fontSize: 12,

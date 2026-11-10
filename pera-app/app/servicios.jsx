@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Image,
   Modal,
   Alert,
   ActivityIndicator,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import Card from '../src/components/ui/Card';
 import Button from '../src/components/ui/Button';
 import Icon from '../src/components/ui/Icon';
@@ -56,8 +58,69 @@ export default function ServiciosView() {
   const [precio, setPrecio] = useState('');
   const [duracion, setDuracion] = useState('45');
   const [pedestalColor, setPedestalColor] = useState(COLORES_PRESET[0]);
+  const [fotoUri, setFotoUri] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
+
+  const seleccionarFoto = async () => {
+    try {
+      const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permiso.granted) {
+        Alert.alert(
+          'Permiso requerido',
+          'Necesitamos acceso a tus fotos para añadir una imagen del servicio.'
+        );
+        return;
+      }
+
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (!resultado.canceled && resultado.assets?.[0]?.uri) {
+        setFotoUri(resultado.assets[0].uri);
+      }
+    } catch (error) {
+      console.warn('Error seleccionando imagen:', error);
+    }
+  };
+
+  const tomarFoto = async () => {
+    try {
+      const permiso = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permiso.granted) {
+        Alert.alert(
+          'Permiso requerido',
+          'Necesitamos acceso a la cámara para tomar la foto del servicio.'
+        );
+        return;
+      }
+
+      const resultado = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (!resultado.canceled && resultado.assets?.[0]?.uri) {
+        setFotoUri(resultado.assets[0].uri);
+      }
+    } catch (error) {
+      console.warn('Error tomando foto:', error);
+    }
+  };
+
+  const mostrarOpcionesFoto = () => {
+    Alert.alert('Foto del servicio', 'Selecciona el origen de la imagen', [
+      { text: 'Cámara', onPress: tomarFoto },
+      { text: 'Galería de fotos', onPress: seleccionarFoto },
+      fotoUri ? { text: 'Quitar foto', style: 'destructive', onPress: () => setFotoUri(null) } : null,
+      { text: 'Cancelar', style: 'cancel' },
+    ].filter(Boolean));
+  };
 
   const cargarDatos = async () => {
     try {
@@ -89,6 +152,7 @@ export default function ServiciosView() {
     setPrecio('');
     setDuracion('45');
     setPedestalColor(COLORES_PRESET[0]);
+    setFotoUri(null);
     setModalVisible(true);
   };
 
@@ -99,6 +163,7 @@ export default function ServiciosView() {
     setPrecio(String(servicio.precio || ''));
     setDuracion(String(servicio.duracion_min || servicio.duracion || 45));
     setPedestalColor(servicio.pedestal_color || servicio.pedestalColor || COLORES_PRESET[0]);
+    setFotoUri(servicio.foto_url || servicio.fotoUrl || null);
     setModalVisible(true);
   };
 
@@ -123,19 +188,26 @@ export default function ServiciosView() {
     setGuardando(true);
     try {
       if (modoEdicion && servicioActualId) {
-        await actualizarServicio(servicioActualId, {
-          nombre: nombre.trim(),
-          precio: precioNum,
-          duracion_min: duracionNum,
-          pedestal_color: pedestalColor,
-        });
+        await actualizarServicio(
+          servicioActualId,
+          {
+            nombre: nombre.trim(),
+            precio: precioNum,
+            duracion_min: duracionNum,
+            pedestal_color: pedestalColor,
+          },
+          fotoUri
+        );
       } else {
-        await crearServicio({
-          nombre: nombre.trim(),
-          precio: precioNum,
-          duracion_min: duracionNum,
-          pedestal_color: pedestalColor,
-        });
+        await crearServicio(
+          {
+            nombre: nombre.trim(),
+            precio: precioNum,
+            duracion_min: duracionNum,
+            pedestal_color: pedestalColor,
+          },
+          fotoUri
+        );
       }
 
       setModalVisible(false);
@@ -233,14 +305,18 @@ export default function ServiciosView() {
                 onPress={() => abrirModalEditar(s)}
                 activeOpacity={0.7}
               >
-                {/* Ícono pedestal */}
+                {/* Ícono o Foto en pedestal */}
                 <View
                   style={[
                     styles.servicePedestal,
                     { backgroundColor: s.pedestal_color || s.pedestalColor || Colors.creamSoft },
                   ]}
                 >
-                  <Icon name="sparkles" size={16} color={Colors.brand} />
+                  {s.foto_url || s.fotoUrl ? (
+                    <Image source={{ uri: s.foto_url || s.fotoUrl }} style={styles.servicePedestalImg} />
+                  ) : (
+                    <Icon name="sparkles" size={16} color={Colors.brand} />
+                  )}
                 </View>
 
                 {/* Info */}
@@ -315,6 +391,23 @@ export default function ServiciosView() {
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.modalFormContent}
             >
+              {/* Foto del servicio */}
+              <TouchableOpacity
+                style={[styles.fotoArea, { backgroundColor: pedestalColor }]}
+                onPress={mostrarOpcionesFoto}
+                activeOpacity={0.85}
+              >
+                {fotoUri ? (
+                  <Image source={{ uri: fotoUri }} style={styles.fotoImg} />
+                ) : (
+                  <View style={styles.fotoPlaceholder}>
+                    <Icon name="camera" size={28} color={Colors.brand} />
+                    <Text style={styles.fotoLabel}>Tocar para añadir foto</Text>
+                    <Text style={styles.fotoSub}>Corte, tinte, diseño de uñas…</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
               {/* Campo Nombre */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Nombre del servicio *</Text>
@@ -735,5 +828,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Montserrat_700Bold',
     color: Colors.rose,
+  },
+
+  // Foto en listado y modal
+  servicePedestalImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    resizeMode: 'cover',
+  },
+  fotoArea: {
+    width: '100%',
+    height: 150,
+    borderRadius: 16,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.stoneLight,
+    marginBottom: 4,
+  },
+  fotoImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  fotoPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  fotoLabel: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.brand,
+  },
+  fotoSub: {
+    fontSize: 10,
+    fontFamily: 'Montserrat_400Regular',
+    color: Colors.stone,
   },
 });

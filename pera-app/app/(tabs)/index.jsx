@@ -269,7 +269,7 @@ export default function DashboardView() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.cream },
   scroll: { flex: 1 },
-  content: { padding: 18, paddingBottom: 100, gap: 12 },
+  content: { padding: 18, paddingBottom: 130, gap: 12 },
   grid2: { flexDirection: 'row', gap: 10 },
   sectionTitle: { fontSize: 13, fontFamily: 'Montserrat_700Bold', color: Colors.ink },
   sectionSub: { fontSize: 10.5, fontFamily: 'Montserrat_400Regular', color: Colors.inkSoft },

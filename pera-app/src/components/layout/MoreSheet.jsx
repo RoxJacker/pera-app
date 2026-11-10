@@ -1,5 +1,5 @@
 import {
-  View, Text, TouchableOpacity, Modal, Pressable, StyleSheet,
+  View, Text, TouchableOpacity, Modal, Pressable, StyleSheet, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,7 +46,9 @@ export default function MoreSheet({ visible, onClose }) {
             {
               backgroundColor: theme.surface,
               borderTopColor: theme.stoneLight,
-              paddingBottom: insets.bottom + 16,
+              paddingBottom: Platform.OS === 'ios'
+                ? insets.bottom + 16
+                : Math.max(insets.bottom, 20) + 16,
             },
           ]}
         >

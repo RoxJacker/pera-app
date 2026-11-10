@@ -14,7 +14,7 @@ import {
   UIManager,
   Platform,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import TopBar from '../../src/components/layout/TopBar';
 import Card from '../../src/components/ui/Card';
@@ -36,6 +36,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 export default function GananciasView() {
+  const router = useRouter();
   const { theme } = useTheme();
   const s = makeStyles(theme);
 
@@ -427,6 +428,24 @@ export default function GananciasView() {
           </View>
         </Card>
 
+        {/* ── Acceso a Historial de Ventas ── */}
+        <TouchableOpacity
+          style={s.historialLinkCard}
+          onPress={() => router.push('/historial')}
+          activeOpacity={0.8}
+        >
+          <View style={s.historialLinkLeft}>
+            <View style={s.historialIconCircle}>
+              <Icon name="tag" size={16} color={theme.brand} />
+            </View>
+            <View>
+              <Text style={s.historialLinkTitle}>Historial completo de ventas</Text>
+              <Text style={s.historialLinkSubtitle}>Revisa tickets, cobros y ventas históricas</Text>
+            </View>
+          </View>
+          <Icon name="chevron-right" size={16} color={theme.stone} />
+        </TouchableOpacity>
+
         {/* ── ¿Cómo se calcula? ── */}
         <Card>
           <View style={s.cardHeaderRow}>
@@ -449,7 +468,7 @@ export default function GananciasView() {
 function makeStyles(t) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: t.cream },
-    content: { padding: 18, paddingBottom: 100, gap: 12 },
+    content: { padding: 18, paddingBottom: 130, gap: 12 },
 
     // Hero
     heroCard: {
@@ -699,6 +718,48 @@ function makeStyles(t) {
       fontFamily: 'Montserrat_400Regular',
       color: t.inkSoft,
       lineHeight: 18,
+    },
+
+    // Acceso a Historial
+    historialLinkCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: t.surface,
+      borderRadius: Radii.card,
+      borderWidth: 1,
+      borderColor: t.stoneLight,
+      padding: 14,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    historialLinkLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    historialIconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: t.creamSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    historialLinkTitle: {
+      fontSize: 13,
+      fontFamily: 'Montserrat_700Bold',
+      color: t.ink,
+    },
+    historialLinkSubtitle: {
+      fontSize: 11,
+      fontFamily: 'Montserrat_400Regular',
+      color: t.inkSoft,
+      marginTop: 1,
     },
   });
 }

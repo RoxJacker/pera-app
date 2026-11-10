@@ -59,8 +59,9 @@ function normalizarVenta(item) {
  *   items: Array<{ id, tipo: 'producto'|'servicio', nombre, cantidad, precioVenta }>
  *   metodoPago: 'Efectivo' | 'Tarjeta' | 'Transferencia'
  *   clienteNombre: string opcional
+ *   fechaVenta: string ISO o Date opcional (para registrar ventas históricas)
  */
-export async function procesarVenta({ items, metodoPago = 'Efectivo', clienteNombre = null }) {
+export async function procesarVenta({ items, metodoPago = 'Efectivo', clienteNombre = null, fechaVenta = null }) {
   if (!items || items.length === 0) {
     throw new Error('El carrito no contiene items');
   }
@@ -74,13 +75,23 @@ export async function procesarVenta({ items, metodoPago = 'Efectivo', clienteNom
     precio_unitario: parseFloat(it.precioVenta ?? it.precio_venta ?? it.precio ?? 0),
   }));
 
+  const fechaIso = fechaVenta
+    ? (typeof fechaVenta === 'string' && fechaVenta.includes('T') ? fechaVenta : new Date(fechaVenta).toISOString())
+    : null;
+
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data, error } = await supabase.rpc('procesar_venta', {
+      const rpcParams = {
         p_items: itemsPayload,
         p_metodo_pago: metodoPago,
         p_cliente_nombre: clienteNombre ? clienteNombre.trim() : null,
-      });
+      };
+
+      if (fechaIso) {
+        rpcParams.p_fecha = fechaIso;
+      }
+
+      const { data, error } = await supabase.rpc('procesar_venta', rpcParams);
 
       if (error) {
         console.error('Error en procesar_venta RPC:', error);
@@ -108,7 +119,7 @@ export async function procesarVenta({ items, metodoPago = 'Efectivo', clienteNom
     metodo_pago: metodoPago,
     estado: 'completada',
     cliente_nombre: clienteNombre,
-    fecha: new Date().toISOString(),
+    fecha: fechaIso || new Date().toISOString(),
     items: itemsPayload.map(it => ({
       nombre: it.nombre,
       tipo: it.tipo,
@@ -128,6 +139,7 @@ export async function procesarVenta({ items, metodoPago = 'Efectivo', clienteNom
     total,
     ganancia_bruta: nuevaVenta.ganancia_bruta,
     metodo_pago: metodoPago,
+    fecha: nuevaVenta.fecha,
   };
 }
 

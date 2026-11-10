@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Image,
   Modal,
   Alert,
   ActivityIndicator,
@@ -38,7 +39,7 @@ const ESTADO_CONFIG = {
   cancelada: { label: 'Cancelada', bg: Colors.terraBg, text: '#8C4127', icon: 'close' },
 };
 
-const FILTROS = ['Hoy', 'Mañana', 'Esta semana', 'Todas'];
+const FILTROS = ['Hoy', 'Mañana', 'Esta semana', 'Historial', 'Todas'];
 
 const HORAS_PRESET = [
   '9:00 am',
@@ -155,10 +156,16 @@ export default function AgendaView() {
     if (filtroActivo === 'Esta semana') {
       return citas.filter(c => c.fecha >= inicioSemana && c.fecha <= finSemana);
     }
+    if (filtroActivo === 'Historial') {
+      // Citas con fecha anterior a HOY, ordenadas de más reciente a más antigua
+      return citas
+        .filter(c => c.fecha < HOY_ISO)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
+    }
     return citas; // 'Todas'
   }, [citas, filtroActivo, inicioSemana, finSemana]);
 
-  // Agrupación por fecha
+  // Agrupación por fecha (orden cronológico ascendente para hoy/mañana/semana, descendente para historial)
   const citasPorDia = useMemo(() => {
     const grupos = {};
     citasFiltradas.forEach(cita => {
@@ -166,8 +173,21 @@ export default function AgendaView() {
       if (!grupos[f]) grupos[f] = [];
       grupos[f].push(cita);
     });
-    return grupos;
-  }, [citasFiltradas]);
+
+    // Ordenar las claves de fecha según el filtro
+    const clavesOrdenadas = Object.keys(grupos).sort((a, b) => {
+      if (filtroActivo === 'Historial') {
+        return b.localeCompare(a); // Más reciente arriba
+      }
+      return a.localeCompare(b); // Ascendente por defecto
+    });
+
+    const ordenado = {};
+    clavesOrdenadas.forEach(k => {
+      ordenado[k] = grupos[k];
+    });
+    return ordenado;
+  }, [citasFiltradas, filtroActivo]);
 
   const abrirModalNuevaCita = () => {
     setClienteNombre('');
@@ -209,6 +229,15 @@ export default function AgendaView() {
       setConflictoAviso(null);
     }
   };
+
+  // Conjunto de fechas que ya tienen citas registradas para mostrarlas en el calendario
+  const fechasConCitas = useMemo(() => {
+    const s = new Set();
+    citas.forEach(c => {
+      if (c.fecha && c.estado !== 'cancelada') s.add(c.fecha);
+    });
+    return s;
+  }, [citas]);
 
   // Lógica del calendario emergente
   const cambiarMes = (delta) => {
@@ -571,6 +600,7 @@ export default function AgendaView() {
                   <View style={styles.chipsRow}>
                     {servicios.map((s) => {
                       const sel = servicioSeleccionado?.id === s.id;
+                      const foto = s.foto_url || s.fotoUrl;
                       return (
                         <TouchableOpacity
                           key={s.id}
@@ -578,6 +608,13 @@ export default function AgendaView() {
                           onPress={() => seleccionarServicio(s)}
                           activeOpacity={0.7}
                         >
+                          {foto ? (
+                            <Image source={{ uri: foto }} style={styles.serviceChipImg} />
+                          ) : (
+                            <View style={[styles.serviceChipIconPlaceholder, { backgroundColor: s.pedestal_color || s.pedestalColor || Colors.creamSoft }]}>
+                              <Icon name="sparkles" size={13} color={Colors.brand} />
+                            </View>
+                          )}
                           <Text style={[styles.serviceChipText, sel && styles.serviceChipTextSelected]}>
                             {s.nombre}
                           </Text>
@@ -619,6 +656,16 @@ export default function AgendaView() {
                     <Text style={styles.fechaCambiarText}>Cambiar</Text>
                   </View>
                 </TouchableOpacity>
+
+                {/* Banner informativo de fecha pasada (no bloqueante) */}
+                {fechaSeleccionada < HOY_ISO && (
+                  <View style={styles.avisoFechaPasada}>
+                    <Icon name="clock" size={13} color={Colors.amberInk} />
+                    <Text style={styles.avisoFechaPasadaText}>
+                      Estás agendando en una fecha pasada (registro histórico).
+                    </Text>
+                  </View>
+                )}
 
                 {/* Atajos rápidos de fecha */}
                 <View style={styles.fechaChipsRow}>
@@ -809,6 +856,7 @@ export default function AgendaView() {
 
                     const esSeleccionado = item.iso === fechaSeleccionada;
                     const esHoy = item.iso === HOY_ISO;
+                    const tieneCitas = fechasConCitas.has(item.iso);
 
                     return (
                       <TouchableOpacity
@@ -830,14 +878,22 @@ export default function AgendaView() {
                         >
                           {item.dia}
                         </Text>
-                        {esHoy && (
+                        {/* Punto indicador: Hoy (grande) o Día con citas (pequeño) */}
+                        {esHoy ? (
                           <View
                             style={[
                               styles.todayDot,
                               esSeleccionado && { backgroundColor: Colors.cream },
                             ]}
                           />
-                        )}
+                        ) : tieneCitas ? (
+                          <View
+                            style={[
+                              styles.citasDot,
+                              esSeleccionado && { backgroundColor: Colors.cream },
+                            ]}
+                          />
+                        ) : null}
                       </TouchableOpacity>
                     );
                   })}
@@ -1227,6 +1283,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.stoneLight,
     alignItems: 'center',
+    gap: 4,
+  },
+  serviceChipImg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginBottom: 2,
+    resizeMode: 'cover',
+  },
+  serviceChipIconPlaceholder: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
   },
   serviceChipSelected: {
     backgroundColor: Colors.brand,
@@ -1492,6 +1564,32 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: Colors.brand,
+  },
+  citasDot: {
+    position: 'absolute',
+    bottom: 4,
+    width: 3.5,
+    height: 3.5,
+    borderRadius: 2,
+    backgroundColor: Colors.amberInk,
+  },
+  avisoFechaPasada: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.amberBg,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: Colors.amberInk + '30',
+  },
+  avisoFechaPasadaText: {
+    flex: 1,
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.amberInk,
   },
   calendarFooter: {
     flexDirection: 'row',

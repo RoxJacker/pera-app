@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,42 @@ const CATEGORIAS_BASE = ['Todos', 'Maquillaje', 'Cuidado Facial', 'Capilar', 'De
 const METODOS_PAGO = ['Efectivo', 'Tarjeta', 'Transferencia'];
 const BILLETES_RAPIDOS = [100, 200, 500, 1000];
 
+function getHoyISO() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getAyerISO() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+const DIAS_SEMANA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+function formatearFechaBonita(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const hoy = getHoyISO();
+  const ayer = getAyerISO();
+  const prefijo = iso === hoy ? 'Hoy · ' : iso === ayer ? 'Ayer · ' : '';
+  const diaNom = date.toLocaleDateString('es-MX', { weekday: 'short' });
+  const diaCap = diaNom.charAt(0).toUpperCase() + diaNom.slice(1);
+  const mesNom = date.toLocaleDateString('es-MX', { month: 'short' });
+  return `${prefijo}${diaCap}, ${d} de ${mesNom}`;
+}
+
 export default function POSView() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -49,6 +85,17 @@ export default function POSView() {
   const [clienteNombreVenta, setClienteNombreVenta] = useState('');
   const [procesandoVenta, setProcesandoVenta] = useState(false);
 
+  // Fecha de la venta (soporte para ventas históricas)
+  const [fechaVenta, setFechaVenta] = useState(getHoyISO());
+  const [calendarioCobroVisible, setCalendarioCobroVisible] = useState(false);
+  const [mesCalendarioCobro, setMesCalendarioCobro] = useState(new Date());
+
+  // Estado del Modal de Venta Única
+  const [modalVentaUnicaVisible, setModalVentaUnicaVisible] = useState(false);
+  const [ventaUnicaNombre, setVentaUnicaNombre] = useState('');
+  const [ventaUnicaPrecio, setVentaUnicaPrecio] = useState('');
+  const [ventaUnicaError, setVentaUnicaError] = useState('');
+
   const cargarItems = async () => {
     try {
       const [prods, servs] = await Promise.all([
@@ -67,7 +114,7 @@ export default function POSView() {
             tipo: 'servicio',
             precioVenta: servEncontrado.precio,
             pedestalColor: servEncontrado.pedestalColor || servEncontrado.pedestal_color || '#EBD9CC',
-            fotoUrl: null,
+            fotoUrl: servEncontrado.foto_url || servEncontrado.fotoUrl || null,
           };
           setCarrito(prev => {
             const existe = prev.find(c => c.id === itemServicio.id);
@@ -111,7 +158,7 @@ export default function POSView() {
       precioVenta: s.precio,
       stock: 9999, // servicios no limitan stock
       pedestalColor: s.pedestalColor || s.pedestal_color || '#EBD9CC',
-      fotoUrl: null,
+      fotoUrl: s.foto_url || s.fotoUrl || null,
     })),
   ];
 
@@ -176,10 +223,85 @@ export default function POSView() {
   const cambioEfectivo = montoRecibidoNum >= totalCarrito ? montoRecibidoNum - totalCarrito : 0;
   const montoInsuficiente = metodoPago === 'Efectivo' && montoRecibido.trim() !== '' && montoRecibidoNum < totalCarrito;
 
+  // Lógica del calendario de fecha de venta
+  const cambiarMesCobro = (delta) => {
+    setMesCalendarioCobro(prev => {
+      const nuevo = new Date(prev);
+      nuevo.setMonth(prev.getMonth() + delta);
+      return nuevo;
+    });
+  };
+
+  const diasDelMesCobro = useMemo(() => {
+    const year = mesCalendarioCobro.getFullYear();
+    const month = mesCalendarioCobro.getMonth();
+    const primerDiaSemana = new Date(year, month, 1).getDay(); // 0 = Domingo
+    const totalDias = new Date(year, month + 1, 0).getDate();
+
+    const celdas = [];
+    for (let i = 0; i < primerDiaSemana; i++) {
+      celdas.push({ dia: null, iso: null });
+    }
+    for (let d = 1; d <= totalDias; d++) {
+      const m = String(month + 1).padStart(2, '0');
+      const diaStr = String(d).padStart(2, '0');
+      celdas.push({
+        dia: d,
+        iso: `${year}-${m}-${diaStr}`,
+      });
+    }
+    return celdas;
+  }, [mesCalendarioCobro]);
+
+  const seleccionarFechaCobro = (iso) => {
+    if (!iso) return;
+    setFechaVenta(iso);
+    setCalendarioCobroVisible(false);
+  };
+
   const abrirModalCobro = () => {
     if (carrito.length === 0) return;
     setMontoRecibido(String(totalCarrito));
+    setFechaVenta(getHoyISO());
+    setMesCalendarioCobro(new Date());
     setModalCobroVisible(true);
+  };
+
+  const abrirModalVentaUnica = () => {
+    setVentaUnicaNombre('');
+    setVentaUnicaPrecio('');
+    setVentaUnicaError('');
+    setModalVentaUnicaVisible(true);
+  };
+
+  const handleAgregarVentaUnica = () => {
+    const nombre = ventaUnicaNombre.trim();
+    const precio = parseFloat(ventaUnicaPrecio);
+
+    if (!nombre) {
+      setVentaUnicaError('Escribe un nombre para identificar la venta.');
+      return;
+    }
+    if (!ventaUnicaPrecio.trim() || isNaN(precio) || precio <= 0) {
+      setVentaUnicaError('Ingresa un precio válido mayor a $0.');
+      return;
+    }
+
+    // Generar ID único para que pueda agregarse varias veces como ítems separados
+    const idUnico = `unico_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const itemUnico = {
+      id: idUnico,
+      nombre,
+      tipo: 'unico',
+      precioVenta: precio,
+      stock: 9999,
+      pedestalColor: '#F3DFD5',
+      fotoUrl: null,
+      cantidad: 1,
+    };
+
+    setCarrito(prev => [...prev, itemUnico]);
+    setModalVentaUnicaVisible(false);
   };
 
   const handleConfirmarVenta = async () => {
@@ -192,10 +314,20 @@ export default function POSView() {
 
     setProcesandoVenta(true);
     try {
+      // Calcular fecha final de venta (si es fecha pasada, asignar la hora del día para mantener orden cronológico)
+      let fechaVentaIso = new Date().toISOString();
+      if (fechaVenta && fechaVenta !== getHoyISO()) {
+        const [y, m, d] = fechaVenta.split('-').map(Number);
+        const ahora = new Date();
+        const fechaCompuesta = new Date(y, m - 1, d, ahora.getHours(), ahora.getMinutes(), ahora.getSeconds());
+        fechaVentaIso = fechaCompuesta.toISOString();
+      }
+
       const res = await procesarVenta({
         items: carrito,
         metodoPago,
         clienteNombre: clienteNombreVenta || params?.clienteNombre || null,
+        fechaVenta: fechaVentaIso,
       });
 
       // Éxito: limpiar carrito y navegar al ticket
@@ -203,6 +335,7 @@ export default function POSView() {
       setModalCobroVisible(false);
       setAvisoCita(null);
       setClienteNombreVenta('');
+      setFechaVenta(getHoyISO());
 
       // Recargar catálogo para refrescar los stocks locales
       await cargarItems();
@@ -234,7 +367,7 @@ export default function POSView() {
         </View>
       )}
 
-      {/* Buscador */}
+      {/* Buscador + botón Venta Única */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
           <Icon name="search" size={15} color={Colors.stone} />
@@ -251,6 +384,16 @@ export default function POSView() {
             </TouchableOpacity>
           )}
         </View>
+        {/* Botón Venta Única */}
+        <TouchableOpacity
+          style={styles.ventaUnicaBtn}
+          onPress={abrirModalVentaUnica}
+          activeOpacity={0.75}
+          accessibilityLabel="Agregar venta única sin registrar producto"
+        >
+          <Icon name="plus" size={14} color={Colors.brand} />
+          <Text style={styles.ventaUnicaBtnText}>Venta única</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Tabs de categoría */}
@@ -323,6 +466,8 @@ export default function POSView() {
                       <Image source={{ uri: item.fotoUrl }} style={styles.pedestalImg} />
                     ) : item.tipo === 'servicio' ? (
                       <Icon name="sparkles" size={22} color={Colors.brand} />
+                    ) : item.tipo === 'unico' ? (
+                      <Icon name="tag" size={22} color={Colors.brand} />
                     ) : (
                       <Icon name="package" size={22} color={Colors.stone} />
                     )}
@@ -350,6 +495,94 @@ export default function POSView() {
         total={totalCarrito}
         onPress={abrirModalCobro}
       />
+
+      {/* MODAL VENTA ÚNICA */}
+      <Modal
+        visible={modalVentaUnicaVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVentaUnicaVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalSheet, { paddingBottom: Math.max(insets.bottom, 16) + 10 }]}>
+            {/* Cabecera */}
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Venta única</Text>
+                <Text style={styles.modalSubtitle}>Sin registrar en inventario</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setModalVentaUnicaVisible(false)}
+                style={styles.closeBtn}
+                activeOpacity={0.7}
+              >
+                <Icon name="close" size={18} color={Colors.ink} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContentScroll}>
+              {/* Descripción */}
+              <View style={styles.ventaUnicaInfoBanner}>
+                <Icon name="tag" size={15} color={Colors.brand} />
+                <Text style={styles.ventaUnicaInfoText}>
+                  Ideal para artículos de una sola vez o cosas que no se volverán a surtir.
+                </Text>
+              </View>
+
+              {/* Campo Nombre */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>Nombre o descripción *</Text>
+                <TextInput
+                  style={styles.clienteInput}
+                  placeholder="Ej. Accesorio para cabello, Crema importada…"
+                  placeholderTextColor={Colors.stone}
+                  value={ventaUnicaNombre}
+                  onChangeText={text => { setVentaUnicaNombre(text); setVentaUnicaError(''); }}
+                  autoCapitalize="sentences"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                />
+              </View>
+
+              {/* Campo Precio */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>Precio de venta ($) *</Text>
+                <TextInput
+                  style={styles.clienteInput}
+                  placeholder="0.00"
+                  placeholderTextColor={Colors.stone}
+                  keyboardType="decimal-pad"
+                  value={ventaUnicaPrecio}
+                  onChangeText={text => { setVentaUnicaPrecio(text); setVentaUnicaError(''); }}
+                  returnKeyType="done"
+                  onSubmitEditing={handleAgregarVentaUnica}
+                />
+              </View>
+
+              {/* Error */}
+              {!!ventaUnicaError && (
+                <View style={styles.ventaUnicaErrorRow}>
+                  <Icon name="warning" size={13} color={Colors.rose} />
+                  <Text style={styles.ventaUnicaErrorText}>{ventaUnicaError}</Text>
+                </View>
+              )}
+
+              {/* Botón agregar */}
+              <TouchableOpacity
+                style={styles.ventaUnicaConfirmBtn}
+                onPress={handleAgregarVentaUnica}
+                activeOpacity={0.8}
+              >
+                <Icon name="plus" size={15} color={Colors.brandText} />
+                <Text style={styles.ventaUnicaConfirmText}>Agregar al carrito</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* MODAL / BOTTOM SHEET DE COBRO Y CARRITO */}
       <Modal
@@ -400,16 +633,23 @@ export default function POSView() {
                           <Image source={{ uri: item.fotoUrl }} style={styles.cartItemThumbImg} />
                         ) : (
                           <Icon
-                            name={item.tipo === 'servicio' ? 'sparkles' : 'package'}
+                            name={item.tipo === 'servicio' ? 'sparkles' : item.tipo === 'unico' ? 'tag' : 'package'}
                             size={16}
                             color={Colors.brand}
                           />
                         )}
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.cartItemName} numberOfLines={1}>
-                          {item.nombre}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                          <Text style={styles.cartItemName} numberOfLines={1}>
+                            {item.nombre}
+                          </Text>
+                          {item.tipo === 'unico' && (
+                            <View style={styles.unicoBadge}>
+                              <Text style={styles.unicoBadgeText}>Único</Text>
+                            </View>
+                          )}
+                        </View>
                         <Text style={styles.cartItemUnitPrice}>
                           ${item.precioVenta} c/u · Subtotal: ${(item.precioVenta * item.cantidad).toFixed(2)}
                         </Text>
@@ -540,6 +780,131 @@ export default function POSView() {
                 />
               </View>
 
+              {/* Fecha de la venta (soporte histórico) */}
+              <View style={styles.sectionBlock}>
+                <View style={styles.fechaCobroHeader}>
+                  <Text style={styles.sectionLabel}>Fecha de la venta</Text>
+                  {fechaVenta < getHoyISO() && (
+                    <View style={styles.historicaBadge}>
+                      <Icon name="clock" size={10} color={Colors.amberInk} />
+                      <Text style={styles.historicaBadgeText}>Histórica</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Tarjeta de fecha seleccionada */}
+                <TouchableOpacity
+                  style={[
+                    styles.fechaCobroCard,
+                    fechaVenta < getHoyISO() && styles.fechaCobroCardHistorica,
+                  ]}
+                  onPress={() => setCalendarioCobroVisible(true)}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.fechaCobroLeft}>
+                    <View style={[
+                      styles.fechaCobroIconCircle,
+                      fechaVenta < getHoyISO() && { backgroundColor: Colors.amberBg },
+                    ]}>
+                      <Icon
+                        name="calendar"
+                        size={15}
+                        color={fechaVenta < getHoyISO() ? Colors.amberInk : Colors.brand}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.fechaCobroLarga}>
+                        {formatearFechaBonita(fechaVenta)}
+                      </Text>
+                      <Text style={styles.fechaCobroSub}>
+                        {fechaVenta === getHoyISO()
+                          ? 'Venta en tiempo real'
+                          : 'Se sumará al corte de ese día'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.fechaCobroCambiarBtn}>
+                    <Icon name="calendar" size={12} color={Colors.brandText} />
+                    <Text style={styles.fechaCobroCambiarText}>Cambiar</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Atajos rápidos de fecha */}
+                <View style={styles.fechaCobroChipsRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.fechaCobroChip,
+                      fechaVenta === getHoyISO() && styles.fechaCobroChipActivo,
+                    ]}
+                    onPress={() => setFechaVenta(getHoyISO())}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.fechaCobroChipText,
+                        fechaVenta === getHoyISO() && styles.fechaCobroChipTextActivo,
+                      ]}
+                    >
+                      Hoy
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.fechaCobroChip,
+                      fechaVenta === getAyerISO() && styles.fechaCobroChipActivo,
+                    ]}
+                    onPress={() => setFechaVenta(getAyerISO())}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.fechaCobroChipText,
+                        fechaVenta === getAyerISO() && styles.fechaCobroChipTextActivo,
+                      ]}
+                    >
+                      Ayer
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.fechaCobroChip,
+                      fechaVenta !== getHoyISO() && fechaVenta !== getAyerISO() && styles.fechaCobroChipActivo,
+                    ]}
+                    onPress={() => setCalendarioCobroVisible(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Icon
+                      name="calendar"
+                      size={12}
+                      color={
+                        fechaVenta !== getHoyISO() && fechaVenta !== getAyerISO()
+                          ? Colors.brandText
+                          : Colors.brand
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.fechaCobroChipText,
+                        fechaVenta !== getHoyISO() && fechaVenta !== getAyerISO() && styles.fechaCobroChipTextActivo,
+                      ]}
+                    >
+                      Otra fecha
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {fechaVenta < getHoyISO() && (
+                  <View style={styles.avisoHistoricoBox}>
+                    <Icon name="clock" size={13} color={Colors.amberInk} />
+                    <Text style={styles.avisoHistoricoText}>
+                      Esta venta se guardará en la fecha indicada y actualizará las ganancias de ese periodo.
+                    </Text>
+                  </View>
+                )}
+              </View>
+
               {/* Resumen Total y Botón de Cobro */}
               <View style={styles.cobroFooter}>
                 <View style={styles.totalRow}>
@@ -555,6 +920,127 @@ export default function POSView() {
                 />
               </View>
             </ScrollView>
+
+            {/* POP-UP CALENDARIO INTERACTIVO PARA COBRO */}
+            {calendarioCobroVisible && (
+              <View style={styles.calendarModalOverlay}>
+                <TouchableOpacity
+                  style={StyleSheet.absoluteFill}
+                  activeOpacity={1}
+                  onPress={() => setCalendarioCobroVisible(false)}
+                />
+                <View style={styles.calendarModalContent}>
+                  {/* Header del Calendario */}
+                  <View style={styles.calendarHeader}>
+                    <Text style={styles.calendarTitle}>Fecha de la venta</Text>
+                    <TouchableOpacity
+                      onPress={() => setCalendarioCobroVisible(false)}
+                      style={styles.calendarCloseBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Icon name="close" size={18} color={Colors.ink} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Selector de Mes */}
+                  <View style={styles.monthNavRow}>
+                    <TouchableOpacity
+                      onPress={() => cambiarMesCobro(-1)}
+                      style={styles.monthArrowBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Icon name="chevron-left" size={16} color={Colors.brand} />
+                    </TouchableOpacity>
+
+                    <Text style={styles.monthNavTitle}>
+                      {MESES[mesCalendarioCobro.getMonth()]} {mesCalendarioCobro.getFullYear()}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={() => cambiarMesCobro(1)}
+                      style={styles.monthArrowBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Icon name="chevron-right" size={16} color={Colors.brand} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Días de la semana */}
+                  <View style={styles.diasSemanaHeader}>
+                    {DIAS_SEMANA_CORTO.map((d) => (
+                      <Text key={d} style={styles.diaSemanaText}>
+                        {d}
+                      </Text>
+                    ))}
+                  </View>
+
+                  {/* Grilla de Días del Mes */}
+                  <View style={styles.calendarGrid}>
+                    {diasDelMesCobro.map((item, idx) => {
+                      if (!item.dia) {
+                        return <View key={`blank_c_${idx}`} style={styles.calendarCell} />;
+                      }
+
+                      const esSeleccionado = item.iso === fechaVenta;
+                      const esHoy = item.iso === getHoyISO();
+
+                      return (
+                        <TouchableOpacity
+                          key={item.iso}
+                          style={[
+                            styles.calendarCell,
+                            esSeleccionado && styles.calendarCellSelected,
+                            esHoy && !esSeleccionado && styles.calendarCellToday,
+                          ]}
+                          onPress={() => seleccionarFechaCobro(item.iso)}
+                          activeOpacity={0.75}
+                        >
+                          <Text
+                            style={[
+                              styles.calendarCellText,
+                              esSeleccionado && styles.calendarCellTextSelected,
+                              esHoy && !esSeleccionado && styles.calendarCellTextToday,
+                            ]}
+                          >
+                            {item.dia}
+                          </Text>
+                          {esHoy && (
+                            <View
+                              style={[
+                                styles.todayDot,
+                                esSeleccionado && { backgroundColor: Colors.cream },
+                              ]}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Footer del Calendario */}
+                  <View style={styles.calendarFooter}>
+                    <TouchableOpacity
+                      style={styles.calendarTodayBtn}
+                      onPress={() => {
+                        setMesCalendarioCobro(new Date());
+                        seleccionarFechaCobro(getHoyISO());
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.calendarTodayBtnText}>Ir a Hoy</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.calendarDoneBtn}
+                      onPress={() => setCalendarioCobroVisible(false)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.calendarDoneBtnText}>Listo</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -587,7 +1073,7 @@ const styles = StyleSheet.create({
   citaAvisoClose: {
     padding: 3,
   },
-  searchContainer: { paddingHorizontal: 18, paddingVertical: 10 },
+  searchContainer: { paddingHorizontal: 18, paddingVertical: 10, gap: 8 },
   searchBox: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
@@ -606,6 +1092,23 @@ const styles = StyleSheet.create({
     color: Colors.ink,
   },
   clearBtn: { padding: 4 },
+  // Botón Venta Única en buscador
+  ventaUnicaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.brand,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  ventaUnicaBtnText: {
+    fontSize: 12,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.brand,
+  },
   tabsScroll: { flexGrow: 0 },
   tabsContent: { paddingHorizontal: 18, gap: 6, paddingBottom: 10 },
   tab: {
@@ -982,5 +1485,347 @@ const styles = StyleSheet.create({
     fontFamily: 'Fraunces_500Medium',
     fontSize: 24,
     color: Colors.brand,
+  },
+  // Venta Única — Badge en carrito
+  unicoBadge: {
+    backgroundColor: Colors.terraBg,
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  unicoBadgeText: {
+    fontSize: 9,
+    fontFamily: 'Montserrat_700Bold',
+    color: '#8C4127',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  // Venta Única Modal
+  ventaUnicaInfoBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: Colors.terraBg,
+    borderRadius: 10,
+    paddingHorizontal: 12,    paddingVertical: 10,
+    marginBottom: 4,
+  },
+  ventaUnicaInfoText: {
+    flex: 1,
+    fontSize: 11.5,
+    fontFamily: 'Montserrat_400Regular',
+    color: Colors.inkSoft,
+    lineHeight: 16,
+  },
+  ventaUnicaErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
+    marginTop: -4,
+  },
+  ventaUnicaErrorText: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.rose,
+  },
+  ventaUnicaConfirmBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: Colors.brand,
+    borderRadius: 13,
+    paddingVertical: 14,
+    marginTop: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  ventaUnicaConfirmText: {
+    fontSize: 13,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.brandText,
+  },
+
+  // Selector de Fecha en Cobro
+  fechaCobroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  historicaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.amberBg,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radii.pill,
+  },
+  historicaBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.amberInk,
+    textTransform: 'uppercase',
+  },
+  fechaCobroCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.cream,
+    borderWidth: 1.5,
+    borderColor: Colors.stoneLight,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  fechaCobroCardHistorica: {
+    borderColor: Colors.amberInk + '80',
+    backgroundColor: Colors.amberBg + '20',
+  },
+  fechaCobroLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  fechaCobroIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fechaCobroLarga: {
+    fontSize: 12.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.ink,
+  },
+  fechaCobroSub: {
+    fontSize: 10,
+    fontFamily: 'Montserrat_400Regular',
+    color: Colors.stone,
+    marginTop: 1,
+  },
+  fechaCobroCambiarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.brand,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: Radii.pill,
+  },
+  fechaCobroCambiarText: {
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.brandText,
+  },
+  fechaCobroChipsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  fechaCobroChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    borderRadius: Radii.pill,
+    backgroundColor: Colors.cream,
+    borderWidth: 1,
+    borderColor: Colors.stoneLight,
+  },
+  fechaCobroChipActivo: {
+    backgroundColor: Colors.brand,
+    borderColor: Colors.brand,
+  },
+  fechaCobroChipText: {
+    fontSize: 11,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.inkSoft,
+  },
+  fechaCobroChipTextActivo: {
+    color: Colors.brandText,
+  },
+  avisoHistoricoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.amberBg,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: Colors.amberInk + '30',
+  },
+  avisoHistoricoText: {
+    flex: 1,
+    fontSize: 10.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.amberInk,
+    lineHeight: 14,
+  },
+
+  // Modal Calendario dentro de Cobro
+  calendarModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 18,
+    zIndex: 99999,
+    elevation: 50,
+  },
+  calendarModalContent: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: Colors.surface,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: Colors.stoneLight,
+    padding: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 25,
+    zIndex: 100000,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.stoneLight,
+  },
+  calendarTitle: {
+    fontSize: 15,
+    fontFamily: 'Montserrat_800ExtraBold',
+    color: Colors.ink,
+  },
+  calendarCloseBtn: {
+    padding: 4,
+  },
+  monthNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  monthNavTitle: {
+    fontSize: 13.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.ink,
+  },
+  monthArrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.creamSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  diasSemanaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.stoneLight,
+    marginBottom: 6,
+  },
+  diaSemanaText: {
+    width: 36,
+    textAlign: 'center',
+    fontSize: 11,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.stone,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  calendarCell: {
+    width: '14.28%',
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 2,
+    borderRadius: 20,
+    position: 'relative',
+  },
+  calendarCellSelected: {
+    backgroundColor: Colors.brand,
+  },
+  calendarCellToday: {
+    borderWidth: 1,
+    borderColor: Colors.brand,
+    backgroundColor: Colors.creamSoft,
+  },
+  calendarCellText: {
+    fontSize: 12.5,
+    fontFamily: 'Montserrat_600SemiBold',
+    color: Colors.ink,
+  },
+  calendarCellTextSelected: {
+    color: Colors.cream,
+    fontFamily: 'Montserrat_700Bold',
+  },
+  calendarCellTextToday: {
+    color: Colors.brand,
+    fontFamily: 'Montserrat_700Bold',
+  },
+  todayDot: {
+    position: 'absolute',
+    bottom: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.brand,
+  },
+  calendarFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.stoneLight,
+  },
+  calendarTodayBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radii.pill,
+    backgroundColor: Colors.creamSoft,
+  },
+  calendarTodayBtnText: {
+    fontSize: 11.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.brand,
+  },
+  calendarDoneBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: Radii.pill,
+    backgroundColor: Colors.brand,
+  },
+  calendarDoneBtnText: {
+    fontSize: 11.5,
+    fontFamily: 'Montserrat_700Bold',
+    color: Colors.cream,
   },
 });

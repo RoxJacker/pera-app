@@ -11,8 +11,16 @@ export default function TabsLayout() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const bottomPadding = Math.max(insets.bottom, 6);
-  const barHeight = Platform.OS === 'ios' ? 56 + insets.bottom : 64;
+  // En Android con barra de 3 botones (Home, Back, Recents), insets.bottom suele ser 0 o ~20-24.
+  // Garantizamos al menos 16-20dp de padding inferior para que la clienta
+  // no pulse accidentalmente el botón Home/Atrás de Android al tocar la barra de pestañas.
+  const bottomPadding = Platform.OS === 'ios'
+    ? Math.max(insets.bottom, 8)
+    : Math.max(insets.bottom, 16);
+
+  const barHeight = Platform.OS === 'ios'
+    ? 56 + insets.bottom
+    : 66 + (insets.bottom > 0 ? insets.bottom : 12);
 
   return (
     <>
@@ -23,10 +31,10 @@ export default function TabsLayout() {
           tabBarInactiveTintColor: theme.stone,
           tabBarShowLabel: true,
           tabBarLabelStyle: {
-            fontSize: 10,
+            fontSize: 10.5,
             fontFamily: 'Montserrat_700Bold',
             marginTop: 2,
-            marginBottom: Platform.OS === 'android' ? 4 : 0,
+            marginBottom: Platform.OS === 'android' ? 6 : 0,
           },
           tabBarStyle: {
             backgroundColor: theme.surface,
@@ -35,10 +43,16 @@ export default function TabsLayout() {
             height: barHeight,
             paddingBottom: bottomPadding,
             paddingTop: 8,
+            elevation: 8,
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
           },
           tabBarItemStyle: {
             alignItems: 'center',
             justifyContent: 'center',
+            paddingTop: 2,
           },
         }}
       >

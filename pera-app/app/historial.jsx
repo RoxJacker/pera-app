@@ -37,9 +37,11 @@ function formatearFecha12h(fechaIso) {
   const d = new Date(fechaIso);
   if (isNaN(d.getTime())) return fechaIso;
 
+  const hoyYear = new Date().getFullYear();
   const fecha = d.toLocaleDateString('es-MX', {
     day: 'numeric',
     month: 'short',
+    year: d.getFullYear() !== hoyYear ? 'numeric' : undefined,
   });
   let horas = d.getHours();
   const minutos = d.getMinutes().toString().padStart(2, '0');
@@ -388,7 +390,7 @@ export default function HistorialView() {
         onRequestClose={() => setVentaSeleccionada(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 20 }]}>
+          <View style={[styles.modalSheet, { paddingBottom: Math.max(insets.bottom, 20) + 16 }]}>
             {/* Tirador visual */}
             <View style={styles.sheetHandle} />
 
@@ -658,7 +660,7 @@ const styles = StyleSheet.create({
   // Listado
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 40,
+    paddingBottom: 70,
     gap: 10,
   },
   loadingContainer: {

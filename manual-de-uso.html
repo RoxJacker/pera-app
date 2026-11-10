@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Uso — Belleza Pera</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 14mm 16mm 14mm;
+    @bottom-center {
+      content: "Belleza Pera — Manual de Usuario Oficial | Página " counter(page);
+      font-size: 8pt;
+      color: #8c8994;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #26242c;
+    background: #ffffff;
+    line-height: 1.55;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* PORTADA */
+  .cover {
+    height: 100%;
+    min-height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    page-break-after: always;
+    padding: 30mm 15mm 20mm 15mm;
+    background: linear-gradient(145deg, #18171B 0%, #2A252E 60%, #3D3339 100%);
+    color: #ffffff;
+    border-radius: 8px;
+  }
+
+  .cover-header {
+    border-left: 4px solid #D4A373;
+    padding-left: 16px;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: rgba(212, 163, 115, 0.2);
+    color: #E6BC94;
+    border: 1px solid rgba(212, 163, 115, 0.4);
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+
+  .cover-title {
+    font-size: 32pt;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 10px 0;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+  }
+
+  .cover-title span {
+    color: #D4A373;
+  }
+
+  .cover-subtitle {
+    font-size: 13pt;
+    font-weight: 400;
+    color: #D0CCD6;
+    margin: 0;
+  }
+
+  .cover-highlights {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 40px 0;
+  }
+
+  .cover-feature {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .cover-feature h4 {
+    margin: 0 0 4px 0;
+    color: #E6BC94;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+
+  .cover-feature p {
+    margin: 0;
+    color: #B5B0BC;
+    font-size: 8.5pt;
+    line-height: 1.4;
+  }
+
+  .cover-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    color: #9E99A6;
+  }
+
+  /* ESTRUCTURA GENERAL */
+  h1 {
+    font-size: 17pt;
+    font-weight: 700;
+    color: #1A191E;
+    border-bottom: 2px solid #EAE4DC;
+    padding-bottom: 6px;
+    margin-top: 0;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  h1 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #C69255;
+    color: #FFFFFF;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: 11pt;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #4A3E38;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    color: #38363F;
+  }
+
+  ul, ol {
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+  }
+
+  li {
+    margin-bottom: 4px;
+    color: #38363F;
+  }
+
+  strong {
+    color: #1A191E;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* COMPONENTES */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 10px 0 14px 0;
+  }
+
+  .card-step {
+    background: #FAF7F2;
+    border: 1px solid #EAE3D9;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .step-num {
+    display: inline-block;
+    background: #E8DCCF;
+    color: #7A532C;
+    font-weight: 700;
+    font-size: 8.5pt;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+
+  .step-title {
+    font-weight: 600;
+    font-size: 9.5pt;
+    color: #2D2621;
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 8.5pt;
+    color: #55505C;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  /* CALLOUTS / ALERTAS */
+  .tip-box {
+    background: #F3F8F2;
+    border-left: 3.5px solid #3E8E41;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0;
+    font-size: 8.5pt;
+    color: #245227;
+  }
+
+  .tip-box strong {
+    color: #1B451E;
+  }
+
+  .info-box {
+    background: #FDF9F3;
+    border-left: 3.5px solid #C69255;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0;
+    font-size: 8.5pt;
+    color: #6E4921;
+  }
+
+  .info-box strong {
+    color: #573714;
+  }
+
+  .pin-badge {
+    display: inline-block;
+    background: #18171B;
+    color: #E6BC94;
+    font-family: monospace;
+    font-size: 11pt;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 4px;
+    letter-spacing: 2px;
+  }
+
+  /* TABLAS */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px 0;
+    font-size: 8.5pt;
+  }
+
+  th {
+    background: #F2EBE1;
+    color: #4A3E38;
+    text-align: left;
+    padding: 6px 10px;
+    font-weight: 600;
+    border-bottom: 1.5px solid #DCD2C5;
+  }
+
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #ECE6DE;
+    color: #38363F;
+  }
+
+  tr:nth-child(even) td {
+    background: #FAF7F2;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 7.5pt;
+    font-weight: 600;
+  }
+
+  .badge-gold { background: #F7EAD7; color: #8A5A24; }
+  .badge-green { background: #E1F2E2; color: #236B28; }
+  .badge-blue { background: #E1EDF7; color: #1D5887; }
+
+  .footer-note {
+    font-size: 8pt;
+    color: #8C8894;
+    text-align: center;
+    border-top: 1px solid #EAE4DC;
+    padding-top: 8px;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= PORTADA ================= -->
+<div class="cover">
+  <div class="cover-header">
+    <div class="cover-badge">Guía Oficial de Operación</div>
+    <h1 class="cover-title">Belleza <span>Pera</span></h1>
+    <p class="cover-subtitle">Manual de Uso del Sistema Móvil para el Usuario Final</p>
+  </div>
+
+  <div class="cover-highlights">
+    <div class="cover-feature">
+      <h4>🛒 Punto de Venta & Caja</h4>
+      <p>Cobro rápido con cálculo automático de cambio, tickets digitales y envío por WhatsApp.</p>
+    </div>
+    <div class="cover-feature">
+      <h4>📦 Control de Inventario</h4>
+      <p>Catálogo completo con 105+ productos, alertas de stock bajo y entradas de mercancía.</p>
+    </div>
+    <div class="cover-feature">
+      <h4>📅 Agenda de Citas</h4>
+      <p>Organización diaria de servicios, prevención de empalmes y cobro con 1 solo toque.</p>
+    </div>
+    <div class="cover-feature">
+      <h4>💰 Ganancias y Gastos</h4>
+      <p>Métricas reales en vivo, desglose de gastos fijos y cálculo exacto de utilidad neta.</p>
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <div><strong>Belleza Pera</strong> — Sistema de Salón y Belleza</div>
+    <div>Versión 1.0 • Móvil Android</div>
+  </div>
+</div>
+
+<!-- ================= PÁGINA 1: ACCESO & INICIO ================= -->
+<div class="page-content">
+  <h1><span class="num">1</span> Acceso al Sistema (Seguridad por PIN)</h1>
+  <p>Al abrir la aplicación en tu teléfono, verás una pantalla de bienvenida protegida con teclado numérico para resguardar la información de tus ventas e inventario:</p>
+  
+  <div class="info-box">
+    <strong>Tu PIN de seguridad inicial:</strong> <span class="pin-badge">1234</span><br>
+    Al teclear los 4 dígitos, el sistema validará tu acceso e ingresará automáticamente sin necesidad de presionar ningún botón adicional.
+  </div>
+
+  <ul>
+    <li><strong>Si te equivocas de número:</strong> Pulsa el botón de retroceso <strong><code>←</code></strong> situado en la esquina inferior derecha del teclado para borrar y reintentar.</li>
+    <li><strong>Cambiar el PIN:</strong> Puedes cambiar tu código en cualquier momento desde la pestaña <strong>Más</strong> → <strong>Configuración</strong> ingresando tu nuevo PIN preferido.</li>
+  </ul>
+
+  <h1><span class="num">2</span> Pantalla de Inicio (Dashboard General)</h1>
+  <p>Es el centro de control que verás al ingresar. Te ofrece una vista panorámica instantánea de la salud de tu negocio:</p>
+
+  <div class="card-grid">
+    <div class="card-step">
+      <div class="step-num">Métrica 1</div>
+      <div class="step-title">Ganancia de Hoy y de la Semana</div>
+      <p class="step-desc">Calcula en tiempo real la ganancia bruta generada hoy y el acumulado semanal, comparado con el periodo anterior.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Métrica 2</div>
+      <div class="step-title">Ventas del Día</div>
+      <p class="step-desc">Te desglosa cuántos productos físicos se vendieron y cuántos servicios de salón se realizaron durante la jornada.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Gráfica</div>
+      <div class="step-title">Ingresos por Día (Semanal)</div>
+      <p class="step-desc">Barras visuales de lunes a domingo. El día de hoy aparece resaltado en tono dorado para medir tu avance diario.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Avisos</div>
+      <div class="step-title">Citas y Alertas de Stock Bajo</div>
+      <p class="step-desc">Tarjetas de alerta directa para avisarte qué productos están por agotarse y qué citas tienes para hoy o mañana.</p>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <strong>Consejo de uso diario:</strong> Al tocar la tarjeta de <em>Stock Bajo</em>, la app te permite presionar <strong>+ Entrada de stock</strong> para registrar de inmediato el pedido que llegó sin tener que buscar el producto manualmente.
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ================= PÁGINA 2: INVENTARIO & ENTRADAS ================= -->
+<div class="page-content">
+  <h1><span class="num">3</span> Inventario de Productos (Stock)</h1>
+  <p>Accede desde la barra inferior en el botón <strong>Stock</strong>. Aquí se administran todas las existencias de mercancía de tu salón:</p>
+
+  <div class="card-grid">
+    <div class="card-step">
+      <div class="step-num">Paso A</div>
+      <div class="step-title">Búsqueda rápida</div>
+      <p class="step-desc">Escribe cualquier letra en el buscador superior para filtrar por nombre (ej. <em>Bissú, Tinte, Maybelline</em>) o marca.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Paso B</div>
+      <div class="step-title">Filtrar por Categoría</div>
+      <p class="step-desc">Usa las pestañas horizontales: <em>Maquillaje, Cuidado Facial, Capilar, Depilación, Herramientas</em> o <em>General</em>.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Paso C</div>
+      <div class="step-title">Alta de nuevo producto</div>
+      <p class="step-desc">Toca <strong>+ Nuevo producto</strong>. Puedes colocar su nombre, marca, categoría, costo, precio al público y foto de la cámara.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Paso D</div>
+      <div class="step-title">Ajuste y Edición</div>
+      <p class="step-desc">Toca cualquier producto para cambiar su precio, modificar el stock mínimo o eliminarlo si ya no lo venderás.</p>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>Colores de pedestal:</strong> Notarás que cada producto tiene una base de color suave diferente según su categoría (Ámbar para Maquillaje, Salvia para Cuidado Facial, Terra para Capilar, etc.). Esto facilita identificar qué tipo de producto es de un solo vistazo.
+  </div>
+
+  <h1><span class="num">4</span> Entrada de Mercancía (Compras a Proveedores)</h1>
+  <p>Cada vez que recibas cajas, compras de mayoreo o paquetes de proveedores, utiliza la función de entrada:</p>
+
+  <ol>
+    <li>En la pantalla de <strong>Stock</strong> pulsa <strong>+ Entrada de stock</strong> (o desde el menú <strong>Más</strong> → <strong>Nueva entrada</strong>).</li>
+    <li><strong>Selecciona el producto</strong> de la lista que acabas de recibir.</li>
+    <li><strong>Indica las piezas:</strong> Usa los botones rápidos <code>+1</code>, <code>+5</code>, <code>+10</code>, <code>+20</code> o escribe el número exacto.</li>
+    <li><strong>Captura el costo unitario:</strong> El precio al que te lo vendió tu proveedor.</li>
+    <li>(Opcional) Agrega una nota con el nombre del proveedor.</li>
+    <li>Presiona <strong>Confirmar entrada de mercancía</strong>.</li>
+  </ol>
+
+  <div class="tip-box">
+    <strong>Resultado automático:</strong> La app sumará inmediatamente las piezas a tu stock disponible y guardará el registro para calcular tus ganancias exactas al venderlo.
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ================= PÁGINA 3: SERVICIOS & CITAS ================= -->
+<div class="page-content">
+  <h1><span class="num">5</span> Catálogo de Servicios del Salón</h1>
+  <p>Accede desde el menú <strong>Más</strong> → <strong>Servicios</strong>:</p>
+  <ul>
+    <li>Aquí das de alta los trabajos que realizas en cabina o tocador: <em>Corte + peinado, Manicura completa, Coloración completa, Tratamiento capilar, Depilación, etc.</em></li>
+    <li>A cada servicio le asignas su <strong>Precio de venta</strong> y su <strong>Duración estimada en minutos</strong> (ej. 45 min, 60 min, 90 min).</li>
+    <li><strong>Diferencia clave con productos:</strong> Los servicios no descuentan inventario físico automáticamente. Si utilizas un producto especial de venta durante el servicio, puedes cobrar ambos juntos en el carrito de caja.</li>
+  </ul>
+
+  <h1><span class="num">6</span> Agenda de Citas (Control de Clientas)</h1>
+  <p>Accede desde el menú <strong>Más</strong> → <strong>Agenda de citas</strong> para gestionar tu tiempo y evitar empalmes:</p>
+
+  <div class="card-grid">
+    <div class="card-step">
+      <div class="step-num">1. Nueva Cita</div>
+      <div class="step-title">Agendar clienta</div>
+      <p class="step-desc">Presiona el botón superior <strong>+ Nueva</strong>. Escribe el nombre de tu clienta y su teléfono de contacto.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">2. Servicio & Hora</div>
+      <div class="step-title">Fecha y horario</div>
+      <p class="step-desc">Selecciona el servicio. Toca el día en el calendario interactivo y elige la hora. La app te avisará si ya hay otra cita en ese horario.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">3. Estados</div>
+      <div class="step-title">Seguimiento visual</div>
+      <p class="step-desc">Cambia el estado con un toque: <span class="badge badge-gold">Pendiente</span> → <span class="badge badge-blue">Confirmada</span> → <span class="badge badge-green">Realizada</span>.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">4. Cobro Rápido</div>
+      <div class="step-title">Cobrar con 1 toque</div>
+      <p class="step-desc">Al terminar la cita, presiona <strong>Cobrar en caja →</strong>. La app abrirá el punto de venta con el servicio y el nombre de la clienta ya cargados.</p>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <strong>Ahorro de tiempo:</strong> El botón <em>Cobrar en caja</em> evita que tengas que volver a escribir el nombre de la clienta o buscar el servicio; lo pasa directo al carrito listo para cobrar.
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ================= PÁGINA 4: PUNTO DE VENTA & TICKET ================= -->
+<div class="page-content">
+  <h1><span class="num">7</span> Punto de Venta (Cobrar en Caja)</h1>
+  <p>Accede desde la pestaña inferior <strong>Venta</strong>. Es la herramienta principal para registrar tus cobros del día:</p>
+
+  <ol>
+    <li><strong>Agregar al carrito:</strong> Toca cualquier producto o servicio del catálogo para sumarlo a la orden. Puedes tocar varias veces para incrementar cantidades.</li>
+    <li><strong>Buscador o categorías:</strong> Usa los filtros superiores para ubicar rápidamente cualquier artículo (ej. buscar <em>"Labial"</em> o filtrar por <em>"Maquillaje"</em>).</li>
+    <li><strong>Revisar la orden:</strong> En la parte inferior aparecerá una barra flotante indicando el total acumulado. Presiona <strong>Ver venta / Cobrar</strong>.</li>
+    <li><strong>Definir método de pago:</strong>
+      <ul>
+        <li><strong>Efectivo:</strong> Escribe con qué billete te pagan (o pulsa los botones de billetes rápidos <code>$100</code>, <code>$200</code>, <code>$500</code>). La app te mostrará el <strong>cambio exacto</strong> a devolver en verde brillante.</li>
+        <li><strong>Tarjeta o Transferencia:</strong> Registra el cobro bancario exacto sin necesidad de cambio.</li>
+      </ul>
+    </li>
+    <li><strong>Confirmar venta:</strong> Presiona <strong>Confirmar venta y generar ticket</strong>. El sistema descontará las existencias del inventario y guardará la ganancia al instante.</li>
+  </ol>
+
+  <h1><span class="num">8</span> Comprobante Digital y Envío por WhatsApp</h1>
+  <p>Al confirmar el cobro, verás el comprobante con su folio formal (ej. <code>#0043</code>), fecha, hora y lista de artículos:</p>
+
+  <div class="card-grid">
+    <div class="card-step">
+      <div class="step-num">Acción 1</div>
+      <div class="step-title">Enviar ticket por WhatsApp</div>
+      <p class="step-desc">Presiona el botón verde de WhatsApp. Se abrirá la conversación con tu clienta con un texto formal y profesional listo para enviar.</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Acción 2</div>
+      <div class="step-title">Cancelar en caso de error</div>
+      <p class="step-desc">Si cobraste un artículo equivocado, presiona <strong>Cancelar venta</strong>. La app anula el folio y devuelve automáticamente las piezas al stock.</p>
+    </div>
+  </div>
+
+  <h1><span class="num">9</span> Historial de Ventas</h1>
+  <p>Accede desde <strong>Más</strong> → <strong>Historial de ventas</strong>:</p>
+  <ul>
+    <li>Puedes consultar los totales facturados por periodo: <strong>Hoy</strong>, <strong>Esta semana</strong>, <strong>Este mes</strong> o <strong>Todas</strong>.</li>
+    <li>Busca cualquier venta por su folio (ej. <code>#42</code>) o por el nombre de la clienta.</li>
+    <li>Al tocar una venta anterior puedes volver a consultar su desglose o reenviar el ticket por WhatsApp si la clienta lo extravió.</li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ================= PÁGINA 5: GANANCIAS, GASTOS & AJUSTES ================= -->
+<div class="page-content">
+  <h1><span class="num">10</span> Ganancias y Desglose de Gastos Fijos</h1>
+  <p>Accede desde la pestaña inferior <strong>Ganancias</strong> para conocer la rentabilidad real de tu salón:</p>
+
+  <div class="card-grid">
+    <div class="card-step">
+      <div class="step-num">Concepto 1</div>
+      <div class="step-title">Ganancia Bruta</div>
+      <p class="step-desc">Es la ganancia comercial directa de tus ventas (Precio al público cobrado − Costo de compra de la mercancía).</p>
+    </div>
+    <div class="card-step">
+      <div class="step-num">Concepto 2</div>
+      <div class="step-title">Ganancia Neta Real</div>
+      <p class="step-desc">Es lo que verdaderamente te queda libre en el bolsillo después de restar todos los gastos fijos del local comercial.</p>
+    </div>
+  </div>
+
+  <h2>💡 Desglose Detallado de Gastos Fijos:</h2>
+  <p>Para no tener solo un número cerrado, la app te permite desglosar exactamente en qué se gasta cada peso del mes:</p>
+  <ul>
+    <li><strong>Ver el desglose:</strong> Toca el botón <strong>Desglosar</strong> en la tarjeta de gastos fijos.</li>
+    <li><strong>Agregar conceptos:</strong> Puedes añadir rubros como <em>Renta de local ($3,500)</em>, <em>Luz / CFE ($800)</em>, <em>Agua ($250)</em>, <em>Internet ($450)</em>, etc.</li>
+    <li><strong>Editar o Eliminar:</strong> Puedes editar el importe de cualquier concepto o eliminarlo con el ícono de basura.</li>
+    <li><strong>Cálculo automático:</strong> La suma de todos los conceptos se actualiza en tiempo real y se resta de tus ganancias automáticamente.</li>
+  </ul>
+
+  <h1><span class="num">11</span> Personalización: Tema Claro y Tema Oscuro</h1>
+  <p>Puedes adaptar la apariencia visual de la app según tu comodidad:</p>
+  <ol>
+    <li>Ve a la pestaña <strong>Más</strong> y selecciona <strong>Configuración</strong>.</li>
+    <li>En la sección <strong>Apariencia</strong> verás el selector de <strong>Tema de la aplicación</strong>:
+      <ul>
+        <li><strong>Tema Claro (Recomendado de día):</strong> Fondos luminosos y nítidos, ideal para salones con buena luz natural o focos potentes.</li>
+        <li><strong>Tema Oscuro (Elegante de noche):</strong> Fondo negro grafito con acentos en oro suave, ideal para descansar la vista.</li>
+      </ul>
+    </li>
+    <li>Tu elección se guarda en tu teléfono y permanecerá activa cada vez que abras la app.</li>
+  </ol>
+
+  <h1><span class="num">12</span> Resumen de Preguntas Frecuentes</h1>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 35%;">Pregunta</th>
+        <th>Respuesta y Solución</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>¿Qué pasa si me quedo sin internet?</strong></td>
+        <td>La app tiene respaldo local de seguridad para permitirte continuar consultando tu información. Al volver la señal, sincroniza tus datos con la nube de Supabase.</td>
+      </tr>
+      <tr>
+        <td><strong>¿Cómo sé si un producto tiene poco stock?</strong></td>
+        <td>La app te avisa en la pantalla de Inicio con un botón de alerta naranja cuando las piezas disponibles sean iguales o menores al stock mínimo fijado (3 por defecto).</td>
+      </tr>
+      <tr>
+        <td><strong>¿Puedo vender un producto y un servicio en la misma nota?</strong></td>
+        <td>Sí. Puedes agregar al carrito tanto productos como servicios; el ticket los desglosará ordenadamente y sumará el total conjunto.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer-note">
+    <strong>Belleza Pera</strong> • Desarrollado para garantizar la tranquilidad y crecimiento de tu negocio de belleza.
+  </div>
+</div>
+
+</body>
+</html>

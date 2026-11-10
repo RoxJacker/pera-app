@@ -23,19 +23,35 @@ export async function optimizarFoto(uri) {
 }
 
 /**
- * Sube la foto al bucket de Supabase Storage
+ * Sube la foto al bucket de Supabase Storage.
+ * - Si la URI no es local (ya es https://), la devuelve sin re-subir.
+ * - Si falla el upload por cualquier motivo, devuelve null en lugar de
+ *   lanzar un error, para que el producto se guarde sin foto en vez de bloquearse.
+ * - Incluye un timeout de 20 s para evitar que un upload colgado trabe la app.
  */
 export async function subirFotoStorage(uri, productoId) {
+  // URI ya remota — no re-subir
+  if (!uri || uri.startsWith('http')) return uri;
+
   if (!isSupabaseConfigured || !supabase) {
-    return uri; // Modo local: retorna la URI temporal local
+    // Modo local: guardamos la URI temporal como referencia
+    return uri;
   }
 
   try {
     const optimizadaUri = await optimizarFoto(uri);
-    const fileName = `${productoId || Date.now()}_${Date.now()}.jpg`;
+    const fileName = `${productoId || 'new'}_${Date.now()}.jpg`;
 
-    const response = await fetch(optimizadaUri);
-    const blob = await response.blob();
+    // Fetch con timeout de 20 segundos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20_000);
+    let blob;
+    try {
+      const response = await fetch(optimizadaUri, { signal: controller.signal });
+      blob = await response.blob();
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     const { error: uploadError } = await supabase.storage
       .from('productos-fotos')
@@ -45,18 +61,22 @@ export async function subirFotoStorage(uri, productoId) {
       });
 
     if (uploadError) {
-      console.warn('Error subiendo foto a Supabase Storage:', uploadError);
-      return uri;
+      console.warn('⚠️ Error subiendo foto a Supabase Storage (guardando producto sin foto):', uploadError.message);
+      return null; // producto se guarda igual, solo sin foto
     }
 
     const { data } = supabase.storage
       .from('productos-fotos')
       .getPublicUrl(fileName);
 
-    return data?.publicUrl || uri;
+    return data?.publicUrl ?? null;
   } catch (err) {
-    console.error('Error en subirFotoStorage:', err);
-    return uri;
+    if (err.name === 'AbortError') {
+      console.warn('⚠️ Upload de foto cancelado por timeout — guardando producto sin foto.');
+    } else {
+      console.warn('⚠️ Error inesperado en subirFotoStorage — guardando producto sin foto:', err.message);
+    }
+    return null; // nunca lanzar al llamador
   }
 }
 
@@ -122,13 +142,16 @@ export async function obtenerProductoPorId(id) {
 }
 
 /**
- * Crea un nuevo producto
+ * Crea un nuevo producto.
+ * El upload de foto es opcional: si falla, el producto se guarda sin imagen.
  */
 export async function crearProducto(nuevoData, fotoUri = null) {
+  // Solo intentar subir si es una URI local nueva (no https://)
   let fotoUrl = null;
-
-  if (fotoUri) {
-    fotoUrl = await subirFotoStorage(fotoUri);
+  if (fotoUri && !fotoUri.startsWith('http')) {
+    fotoUrl = await subirFotoStorage(fotoUri); // nunca lanza, puede devolver null
+  } else if (fotoUri && fotoUri.startsWith('http')) {
+    fotoUrl = fotoUri; // ya es URL remota, conservar
   }
 
   const payload = {
@@ -178,13 +201,17 @@ export async function crearProducto(nuevoData, fotoUri = null) {
 }
 
 /**
- * Actualiza un producto existente
+ * Actualiza un producto existente.
+ * El upload de foto es opcional: si falla, conserva la URL anterior.
  */
 export async function actualizarProducto(id, datos, nuevaFotoUri = null) {
-  let fotoUrl = datos.foto_url || datos.fotoUrl;
+  // fotoUrl parte del valor previo guardado en BD
+  let fotoUrl = datos.foto_url || datos.fotoUrl || null;
 
+  // Solo subir si es URI local nueva
   if (nuevaFotoUri && !nuevaFotoUri.startsWith('http')) {
-    fotoUrl = await subirFotoStorage(nuevaFotoUri, id);
+    const subida = await subirFotoStorage(nuevaFotoUri, id); // nunca lanza
+    if (subida) fotoUrl = subida; // si falló el upload mantenemos la foto anterior
   }
 
   const payload = {
